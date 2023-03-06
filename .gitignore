@@ -1,0 +1,5 @@
+results/00LOGS/ 
+results/01CELLRANGER/
+resources/cellranger
+resources/fq
+workflow/.snakemake/

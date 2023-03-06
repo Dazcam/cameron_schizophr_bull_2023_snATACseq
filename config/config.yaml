@@ -1,0 +1,81 @@
+ATAC_REGIONS:
+    GE:
+
+SAMPLES_ATAC:
+    14510_WGE_ATAC:
+    14611_WGE_ATAC:
+    14993_WGE_ATAC:
+
+FASTQ_DIR: ../resources/fq 
+REFERENCE_ATAC: ../resources/cellranger/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/
+
+MACS2_PATH: '~/.conda/envs/macs2/bin/macs2'
+
+HARs: '../resources/sheets/HARs_capra_2019_supp_table_5.csv'
+
+ATAC_CELL_TYPES:
+    FC.ExN:
+    FC.InN:
+    FC.RG:
+    FC.MG:
+    FC.undef:
+    LGE.InN:  
+    MGE.InN:  
+    CGE.InN:  
+    GE.RG:    
+    GE.Undef: 
+
+LDSR_CELL_TYPES:
+    FC.ExN:
+    FC.InN:
+    FC.RG:
+    FC.MG:
+    FC.undef:
+    FC.UNION:
+    LGE.InN:
+    MGE.InN:
+    CGE.InN:
+    GE.RG:
+    GE.Undef:
+    GE.UNION:
+
+LDSC_GWAS:
+    SCZ:
+    BPD:
+    ASD:
+    ADHD:
+#    HEIGHT:
+    MDD:
+    INSMNA: '../resources/gwas_sumstats/Insomnia_sumstats_Jansenetal.txt.gz'               
+    NRTCSM: '../resources/gwas_sumstats/neuroticism.gwas.full_fixHeader.txt.gz'
+    BV: '../resources/gwas_sumstats/meta_analysis_BV_Jansenetal_2020.sumstats.txt.gz'  
+#     AD: '../resources/gwas_sumstats/PGCALZ2sumstatsExcluding23andMe_fixHeader.txt.gz'
+    INTEL: '../resources/gwas_sumstats/SavageJansen_2018_intelligence_metaanalysis.txt.gz'
+
+LDSR_CONDITIONS: '../resources/sheets/LDSR_conditions.tsv'
+
+
+LDSR_CONDITIONAL:
+    FC.ExN:
+        - FC.InN
+        - FC.RG
+    FC.InN:
+        - FC.ExN
+        - FC.RG
+    FC.RG:
+        - FC.ExN
+        - FC.InN
+
+PEAK_EXTENSION:
+    ext250bp:
+    ext500bp:
+
+LSI_PARAMS:
+    Iteration:
+    Resolution:
+    Variable_Features:
+    Max_Clusters:
+    N_starts:
+    Dimensions:
+    Sample_cells:
+

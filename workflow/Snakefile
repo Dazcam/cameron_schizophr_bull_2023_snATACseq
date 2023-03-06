@@ -1,0 +1,8 @@
+configfile: '../config/config.yaml'
+
+include: "rules/snATACseq_cellRanger.smk"
+
+rule all:
+    input:
+        expand("../results/01CELLRANGER/{SAMPLE}.stamp", SAMPLE = config['SAMPLES_ATAC']),
+
