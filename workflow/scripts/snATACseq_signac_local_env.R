@@ -1,6 +1,7 @@
 ## Load local packages for Signac processing packages  --------------------------------
 library(Signac)
 library(Seurat)
+library(tidyverse)
 library(GenomeInfoDb)
 library(EnsDb.Hsapiens.v86)
 library(ggplot2)
@@ -9,6 +10,8 @@ library(data.table)
 library(cowplot)
 library(GenomicRanges)
 library(future)
+library(tictoc)
+library(SeuratWrappers) # For RunFastMNN
 set.seed(1234)
 
 # Set multiprocessing for dataset merging
@@ -30,8 +33,8 @@ GE_MARKER_GENES <-  c('SLC17A7', # ExN
                       'OLIG1', 'OLIG2', # OPC
                       'ITM2A') # Endothelial
 
-cat('\n\nAvailable Vars: \n\nSAMPLES:', SAMPLES, 
+cat('\nAvailable Vars: \n\nSAMPLES:', SAMPLES, 
     '\n\nSAMPLE_IDs:', SAMPLE_IDs, 
-    '\n\nGE_MARKER_GENES:', GE_MARKER_GENES)
+    '\n\nGE_MARKER_GENES:', GE_MARKER_GENES, '\n\n')
 
 
