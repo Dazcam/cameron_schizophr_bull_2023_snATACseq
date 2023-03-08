@@ -18,6 +18,9 @@ set.seed(1234)
 plan("multiprocess", workers = 4)
 options(future.globals.maxSize = 15000 * 1024^2)
 
+# Set global variables
+SAMPLE_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/01CELLRANGER/'
+SIGNAC_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/03SIGNAC/'
 SAMPLES <- c("14510_WGE_ATAC", "14611_WGE_ATAC", "14993_WGE_ATAC")
 SAMPLE_IDs <- c("GE_510", "GE_611", "GE_993")
 
@@ -33,8 +36,10 @@ GE_MARKER_GENES <-  c('SLC17A7', # ExN
                       'OLIG1', 'OLIG2', # OPC
                       'ITM2A') # Endothelial
 
-cat('\nAvailable Vars: \n\nSAMPLES:', SAMPLES, 
+cat('\nAvailable Vars loaded from signac_local_env.R: \n\nSAMPLES:', SAMPLES, 
     '\n\nSAMPLE_IDs:', SAMPLE_IDs, 
+    '\n\nSAMPLE_DIR:', SAMPLE_DIR, 
+    '\n\nSIGNAC_DIR:', SIGNAC_DIR, 
     '\n\nGE_MARKER_GENES:', GE_MARKER_GENES, '\n\n')
 
 
