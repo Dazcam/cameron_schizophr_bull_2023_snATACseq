@@ -1,0 +1,115 @@
+---
+title: "snATAC ArchR initial QC report `r REGION`"
+author: "Darren Cameron"
+date: "`r format(Sys.time(), '%d/%m/%y')`"
+output:
+  html_document:
+    theme: paper
+---
+
+```{r packages, echo=FALSE, include=FALSE}
+library(SingleCellExperiment)
+library(scater)
+library(cowplot)
+library(knitr)
+```
+
+snATACseq analysis with ArchR.
+
+*** 
+
+### Results {.tabset}
+
+#### QC
+
+ArchR pre-filters the cells using 2 metrics:
+
+  + TSS Enrichment > `r TSS_THRESH`
+  + Min frags per cell > `r FRAGS_THRESH`
+
+***
+
+**Counts**
+
+```{R, filt_cells_dropped, echo=FALSE}
+knitr::kable(counts_df)
+```
+
+***
+
+**Doublet removal**
+
+Post-doublet removal numbers are the final cell numbers moving forward. 
+
+```{R, doublets, echo=FALSE}
+knitr::kable(doublet_df)
+```
+
+***
+
+**Pre-filter plots**
+
+***
+
+**TSS enrichment vs. log10(Number of fragments) - these are the pre-filtered results**
+
+If you want to compare these results to others studies check out page 4 of the [ArchR supplementary document](https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-021-00790-6/MediaObjects/41588_2021_790_MOESM1_ESM.pdf).
+
+```{R, pre_filt_plots, echo=FALSE}
+preQC_tss_uFrag_plot <- plot_grid(preQC_tss_uFrag_plot_510, preQC_tss_uFrag_plot_611, preQC_tss_uFrag_plot_993) 
+print(preQC_tss_uFrag_plot)
+```
+
+***
+
+**Post-filter plots**
+
+**TSS enrichment vs. log10(Number of fragments) plot - all samples combined**
+
+```{R, post_filt_tss_uFrag, echo=FALSE}
+tss_uFrag_plot
+```
+
+*** 
+
+**Fragment size plot**
+
+```{R, post_filt_frag_size, echo=FALSE}
+fragSize_plot
+```
+
+***
+
+**TSS plot**
+
+```{R, post_filt_tss_plot, echo=FALSE}
+tss_plot
+```
+
+***
+
+**Ridge plot**
+
+```{R, post_filt_ridge_plot, echo=FALSE, message=FALSE, warning=FALSE}
+ridge_plot
+```
+
+***
+
+#### Cluster plots
+
+
+```{R, Clusters, echo=FALSE, , fig.height = 10, fig.width = 10}
+print(group_plot)
+```
+
+***
+
+#### UMAPs
+
+```{R, UMAP_per_gene, echo=FALSE, fig.height = 10, fig.width = 10}
+print(do.call(cowplot::plot_grid, c(list(ncol = 3), all_genes_UMAP)))
+```
+
+***
+
