@@ -152,7 +152,8 @@ signac_snRNAseq_integration <- function(
     
   SEURAT_OBJ = NULL,
   PUBLIC_DATA = NULL,
-  SAMPLE_ID = NULL) {
+  SAMPLE_ID = NULL,
+  QUERY_REDUCTION = NULL) {
   
   #' Run Signac snRNAseq integration on GE data
   #' 
@@ -162,6 +163,7 @@ signac_snRNAseq_integration <- function(
   #' @param PUBLIC_DATA A GE public dataset to use for integration. Choices
   #' Shi or Cameron.
   #' @param SAMPLE_ID The sample ID for the Seurat object
+  #' @param QUERY_REDUCTION Name of the dim reduction used for query dataset
   
   tic()
   
@@ -199,11 +201,11 @@ signac_snRNAseq_integration <- function(
     reduction = 'cca'
   )
   
-  cat('\nTranferring labels  ...\n\n') 
+  cat('\nTranferring labels  ...\n\n')
   predicted.labels <- TransferData(
     anchorset = transfer.anchors,
     refdata = seurat.pub$ClusterID,
-    weight.reduction = SEURAT_OBJ[['lsi']],
+    weight.reduction = SEURAT_OBJ[[QUERY_REDUCTION]],
     dims = 2:30
   )
   

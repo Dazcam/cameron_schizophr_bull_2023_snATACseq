@@ -200,10 +200,15 @@ DefaultAssay(seurat.combined) <- 'RNA'
 signac_snRNAseq_integration(seurat.combined, 'Shi', 'combined')
 signac_snRNAseq_integration(seurat.combined, 'Cam', 'combined')
 
+
+
+
 R_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/'
 dir.create(paste0(R_DIR), recursive = T)
 save.image(file=paste0(R_DIR, 'snATACseq_signac_local_testing.RData'))
 load(file = paste0(R_DIR, 'snATACseq_signac_local_testing.RData'))
+
+
 #To_do:
 #Fix peak_names - done still does not save peak files to dir 
 # (no need can generate this myself anyway)

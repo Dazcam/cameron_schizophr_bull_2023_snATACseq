@@ -36,10 +36,9 @@ GE_MARKER_GENES <-  c('SLC17A7', # ExN
                       'OLIG1', 'OLIG2', # OPC
                       'ITM2A') # Endothelial
 
-cat('\nAvailable Vars loaded from signac_local_env.R: \n\nSAMPLES:', SAMPLES, 
+cat('\nAvailable vars loaded from signac_local_env.R: \n\nSAMPLES:', SAMPLES, 
     '\n\nSAMPLE_IDs:', SAMPLE_IDs, 
     '\n\nSAMPLE_DIR:', SAMPLE_DIR, 
     '\n\nSIGNAC_DIR:', SIGNAC_DIR, 
     '\n\nGE_MARKER_GENES:', GE_MARKER_GENES, '\n\n')
-
 

@@ -158,6 +158,69 @@ run_peak_calling(archR.2, 'Clusters',
 create_archR_group_plot(archR.4, 'Clusters_broad', 'UMAP')
 create_umap_batch_plots(archR.4, 'Clusters_broad', 'UMAP')
 
+## ArchR to Signac  -------------------------------------------------------------------
+seurat_atac <- readRDS(paste0(R_DIR, 'seurat_atac.rds'))
+
+# Run integration
+signac_snRNAseq_integration(seurat_atac, 'Shi', 'seurat_atac', 'IterativeLSI')
+
+# Subset based on integration prediction score
+seurat_atac_75 <- subset(seurat_int_seurat_atac, prediction.score.max >= 0.75)
+seurat_atac_60 <- subset(seurat_int_seurat_atac, prediction.score.max >= 0.60)
+seurat_atac_50 <- subset(seurat_int_seurat_atac, prediction.score.max >= 0.50)
+
+# Plot
+umap_archR <- DimPlot(
+  object = seurat_atac,
+  group.by = 'Clusters',
+  label = TRUE,
+  repel = TRUE) + NoLegend() + ggtitle('archR')
+umap_pred_id <- DimPlot(
+  object = seurat_int_seurat_atac,
+  group.by = 'predicted.id',
+  label = TRUE,
+  repel = TRUE) + NoLegend() + ggtitle('scATAC-seq')
+umap_pred_score <- FeaturePlot(
+  object = seurat_int_seurat_atac,
+  features = 'prediction.score.max') + ggtitle('pred-score')
+
+for (SCORE in c('50', '60', '75')) {
+  
+  SEURAT_OBJ <- get(paste0('seurat_atac_', SCORE))
+  
+  UMAP <- DimPlot(
+    object = SEURAT_OBJ,
+    group.by = 'predicted.id',
+    label = TRUE,
+    repel = TRUE) + NoLegend() + 
+    ggtitle(paste0('scATAC-seq_', SCORE))
+  
+  SEURAT_META <- SEURAT_OBJ[[]]
+  
+  PRED_ID_SCORE <- table(SEURAT_META$predicted.id) 
+  SAMPLE_CNT <- table(SEURAT_META$Sample) 
+  
+  CELL_IDs <- rownames(SEURAT_OBJ)
+  
+  assign(paste0('umap', SCORE), UMAP, .GlobalEnv)
+  assign(paste0('pred_id_score_', SCORE), PRED_ID_SCORE, .GlobalEnv)
+  assign(paste0('sample_cnt_', SCORE), SAMPLE_CNT, .GlobalEnv)
+  assign(paste0('cell_ID_', SCORE), CELL_IDs, .GlobalEnv) 
+  
+} 
+
+plot_grid(umap_archR, umap_pred_id, umap_pred_score, 
+          umap50, umap60, umap75)
+
+# Check prediction score distributions
+hist(seurat_int_seurat_atac$prediction.score.max)
+seurat_meta <- seurat_int_seurat_atac[[]]
+seurat_meta %>%
+  dplyr::select(Clusters, prediction.score.max) %>%
+  group_by(Clusters) %>%
+  summarise(mean_score = mean(prediction.score.max), 
+            median_score= median(prediction.score.max))
+
 ##  Peak overlap  ---------------------------------------------------------------------
 library(ChIPpeakAnno)
 library(VennDiagram)
