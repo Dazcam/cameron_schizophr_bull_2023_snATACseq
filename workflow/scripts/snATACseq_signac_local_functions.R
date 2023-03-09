@@ -28,7 +28,7 @@ signac_default_processing <- function(
     
     tic()
     
-    cat('\nCreating seurat object for:', SAMPLES[SAMPLE])
+    cat('\nCreating Seurat object for:', SAMPLES[SAMPLE])
     cat('\nLoading Cell Ranger data ... \n\n')
     counts <- Read10X_h5(filename = paste0(SAMPLE_DIR, SAMPLES[SAMPLE],
                                            '/outs/filtered_peak_bc_matrix.h5'))
@@ -92,7 +92,7 @@ signac_default_processing <- function(
     )
     
     cat('\nSubsetting ... \n\n')
-    seurat.obj <- subset(
+    seurat.sub <- subset(
       x = seurat.obj,
       subset = peak_region_fragments > 3000 &
         peak_region_fragments < 20000 &
@@ -101,34 +101,34 @@ signac_default_processing <- function(
         nucleosome_signal < 4 &
         TSS.enrichment > 2
     )
-    seurat.obj
+    seurat.sub
     
     cat('\nRunning main Signac processes ... \n\n')
-    seurat.obj <- RunTFIDF(seurat.obj)
-    seurat.obj <- FindTopFeatures(seurat.obj, min.cutoff = 'q0')
-    seurat.obj <- RunSVD(seurat.obj)
-    seurat.obj <- RunUMAP(object = seurat.obj, reduction = 'lsi', dims = 2:30)
-    seurat.obj <- FindNeighbors(object = seurat.obj, reduction = 'lsi', dims = 2:30)
-    seurat.obj <- FindClusters(object = seurat.obj, verbose = FALSE, algorithm = 3)
-    DimPlot(object = seurat.obj, label = TRUE) + NoLegend()
+    seurat.sub <- RunTFIDF(seurat.sub)
+    seurat.sub <- FindTopFeatures(seurat.sub, min.cutoff = 'q0')
+    seurat.sub <- RunSVD(seurat.sub)
+    seurat.sub <- RunUMAP(object = seurat.sub, reduction = 'lsi', dims = 2:30)
+    seurat.sub <- FindNeighbors(object = seurat.sub, reduction = 'lsi', dims = 2:30)
+    seurat.sub <- FindClusters(object = seurat.sub, verbose = FALSE, algorithm = 3)
+    DimPlot(object = seurat.sub, label = TRUE) + NoLegend()
     
     cat('\nGenerate gene activity matrix ... \n\n')
-    gene.activities <- GeneActivity(seurat.obj)
+    gene.activities <- GeneActivity(seurat.sub)
     
     # add the gene activity matrix to the Seurat object as a new assay and normalize it
-    seurat.obj[['RNA']] <- CreateAssayObject(counts = gene.activities)
-    seurat.obj <- NormalizeData(
-      object = seurat.obj,
+    seurat.sub[['RNA']] <- CreateAssayObject(counts = gene.activities)
+    seurat.sub <- NormalizeData(
+      object = seurat.sub,
       assay = 'RNA',
       normalization.method = 'LogNormalize',
-      scale.factor = median(seurat.obj$nCount_RNA)
+      scale.factor = median(seurat.sub$nCount_RNA)
     )
     
-    DefaultAssay(seurat.obj) <- 'RNA'
+    DefaultAssay(seurat.sub) <- 'RNA'
     
     cat('\nCreate gene marker feature plot ... \n\n')
     GENE_UMAP <- FeaturePlot(
-      object = seurat.obj,
+      object = seurat.sub,
       features = MARKER_GENES,
       pt.size = 0.1,
       max.cutoff = 'q95',
@@ -139,7 +139,8 @@ signac_default_processing <- function(
     assign(paste0('qc_plot_', SAMPLE_IDs[SAMPLE]), QC_PLOT, .GlobalEnv)
     assign(paste0('gene_UMAP_', SAMPLE_IDs[SAMPLE]), GENE_UMAP, .GlobalEnv)
     assign(paste0('seurat_obj_', SAMPLE_IDs[SAMPLE]), seurat.obj, .GlobalEnv)
-    assign(paste0('depth_cor_', SAMPLE_IDs[SAMPLE]), DepthCor(seurat.obj), .GlobalEnv)
+    assign(paste0('seurat_sub_', SAMPLE_IDs[SAMPLE]), seurat.sub, .GlobalEnv)
+    assign(paste0('depth_cor_', SAMPLE_IDs[SAMPLE]), DepthCor(seurat.sub), .GlobalEnv)
     
     toc(func.toc=toc_min)
     
@@ -150,7 +151,8 @@ signac_default_processing <- function(
 signac_snRNAseq_integration <- function(
     
   SEURAT_OBJ = NULL,
-  PUBLIC_DATA = NULL) {
+  PUBLIC_DATA = NULL,
+  SAMPLE_ID = NULL) {
   
   #' Run Signac snRNAseq integration on GE data
   #' 
@@ -159,10 +161,15 @@ signac_snRNAseq_integration <- function(
   #' @param SEURAT_OBJ A Seurat object for chromatin data 
   #' @param PUBLIC_DATA A GE public dataset to use for integration. Choices
   #' Shi or Cameron.
+  #' @param SAMPLE_ID The sample ID for the Seurat object
+  
+  tic()
   
   SHI_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/'
   CAMERON_DIR <- '~/Desktop/fetal_brain_snRNAseq_110122/resources/R_objects/'
   DefaultAssay(SEURAT_OBJ) <- "RNA"
+  
+  cat('\nRunning integration for', SAMPLE_ID, '...')
   
   if (PUBLIC_DATA == 'Shi') {
     
@@ -204,11 +211,11 @@ signac_snRNAseq_integration <- function(
   
   if (PUBLIC_DATA == 'Shi') {
     
-    SEURAT_OBJ$predicted.labels.shi <<- SEURAT_OBJ$predicted.labels
+    SEURAT_OBJ$predicted.id.shi <- SEURAT_OBJ$predicted.id
     
   } else {
     
-    SEURAT_OBJ$predicted.labels.cam <<- SEURAT_OBJ$predicted.cam
+    SEURAT_OBJ$predicted.is.cam <- SEURAT_OBJ$predicted.id
     
   }
   
@@ -228,14 +235,41 @@ signac_snRNAseq_integration <- function(
   
   if (PUBLIC_DATA == 'Shi') {
     
-    assign('rna_int_plot_shi', PLOT, .GlobalEnv)
-    cat('\nReturned rna_int_plot_shi.')
+    assign(paste0('seurat_int_', SAMPLE_ID), SEURAT_OBJ, .GlobalEnv)
+    assign(paste0('rna_int_plot_shi_', SAMPLE_ID), PLOT, .GlobalEnv)
+    cat('\nReturned: seurat_obj_int_', SAMPLE_ID,
+        'rna_int_plot_shi_', SAMPLE_ID, sep = '')
     
   } else {
     
-    assign('rna_int_plot_cam', PLOT, .GlobalEnv)
-    cat('\nReturned rna_int_plot_cam.')
+    assign(paste0('seurat_int_', SAMPLE_ID), SEURAT_OBJ, .GlobalEnv)
+    assign(paste0('rna_int_plot_cam_', SAMPLE_ID), PLOT, .GlobalEnv)
+    cat('\nReturned: seurat_int_', SAMPLE_ID,
+        'rna_int_plot_cam_', SAMPLE_ID, '\n', sep = '')
     
   }
 
+  toc(func.toc=toc_min)
+  
+}
+
+signac_UMAP_per_sample <- function() {
+  
+  UMAP_list <- list()
+  
+  for (SAMPLE in SAMPLE_IDs) {
+    
+    SEURAT_OBJ <- get(paste0('seurat_sub_', SAMPLE))
+    
+    UMAP_PLOT <- DimPlot(object = SEURAT_OBJ, label = TRUE) + 
+      NoLegend() + 
+      ggtitle(SAMPLE)
+    
+    UMAP_list[[SAMPLE]] <- UMAP_PLOT
+    
+    
+  }
+  
+  return(plot_grid(plotlist = UMAP_list))
+  
 }
