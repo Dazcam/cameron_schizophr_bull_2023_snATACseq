@@ -234,7 +234,7 @@ run_initial_qc <- function() {
     
     # Subset IDs
     sampleID <- substr(SAMPLE_IDs[SAMPLE], 1, 7)
-    donorID <- substr(SAMPLE_IDs[SAMPLE], 5, 8)
+    donorID <- substr(SAMPLE_IDs[SAMPLE], 4, 7)
     
     # Load Pre-filtered data
     preQC_df <- readRDS(paste0(OUT_DIR, "/QualityControl/", SAMPLE_IDs[SAMPLE], "/", 
@@ -277,6 +277,7 @@ run_initial_qc <- function() {
     preQC_tss_uFrag_plot <- plot_grid(preQC_tss_uFrag_plot_510, preQC_tss_uFrag_plot_611, preQC_tss_uFrag_plot_993, 
                                         preQC_tss_uFrag_plot_G17, preQC_tss_uFrag_plot_G18, preQC_tss_uFrag_plot_G20, 
                                         preQC_tss_uFrag_plot_G21, preQC_tss_uFrag_plot_T31, preQC_tss_uFrag_plot_T34)
+    
     # Counts df
     cat('\nGenerating counts df ... \n')
     counts_df <<- rbind(counts_df_510, counts_df_611, counts_df_993,
