@@ -983,7 +983,7 @@ run_archR2Signac <- function() {
   loadinglibrary(packages)
   
   # Obtain ArchRProject peak matrix for object conversion
-  archR <- loadArchRProject(path = paste0(ARCHR_DIR, 'GE/')
+  archR <- loadArchRProject(path = paste0(ARCHR_DIR, 'GE/'))
   pkm <- getPeakMatrix(archR) # proj is an ArchRProject
   
   # Extract appropriate Ensembl gene annotation and convert to UCSC style.

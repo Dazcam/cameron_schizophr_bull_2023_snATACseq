@@ -1,8 +1,11 @@
 configfile: '../config/config.yaml'
 
 include: "rules/snATACseq_cellRanger.smk"
+include: "rules/snATACseq_archR_processing.smk"
 
 rule all:
     input:
-        expand("../results/01CELLRANGER/{SAMPLE}.stamp", SAMPLE = config['SAMPLES_ATAC']),
+#        expand("../results/01CELLRANGER/{SAMPLE}.stamp", SAMPLE = config['SAMPLES_ATAC']),
+        expand("../results/03MARKDOWN/snATACseq_QC_{REGION}.html", REGION = config['ATAC_REGIONS'])
+#        expand("../results/03MARKDOWN/snATACseq_remove_batch_effects_{REGION}.html", REGION = config['ATAC_REGIONS']) 
 

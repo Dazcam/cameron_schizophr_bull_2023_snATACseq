@@ -14,7 +14,13 @@ CR_cnt_ATAC:
     num_cores: 32
     total_mem: 143G
     duration: 1-00:00:00
-
+snATAC_seq_QC:
+    num_cores: 12
+    total_mem: 128G
+    duration: 1-00:00:00
+snATAC_remove_batch_effects:
+    num_cores: 12
+    total_mem: 96G
 # -------  MUNGE SUMSTATS  ---------
 standardise_phenotype_sumstats:
     num_cores: 1

@@ -100,7 +100,7 @@ ridge_plot
 
 
 ```{R, Clusters, echo=FALSE, , fig.height = 10, fig.width = 10}
-print(group_plot)
+print(group_plot_Clusters)
 ```
 
 ***
