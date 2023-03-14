@@ -67,9 +67,9 @@ SAMPLES <- c("14510_WGE_ATAC", "14611_WGE_ATAC", "14993_WGE_ATAC")
 SAMPLE_IDs <- SAMPLES %>% 
   str_remove("14") %>% 
   str_remove("_ATAC") %>%
-  str_replace("510_WGE", "WGE_510") %>%
-  str_replace("611_WGE", "WGE_611") %>%
-  str_replace("993_WGE", "WGE_993") 
+  str_replace("510_WGE", "GE_510") %>%
+  str_replace("611_WGE", "GE_611") %>%
+  str_replace("993_WGE", "GE_993") 
 
 
 # Fix this not needed on hawk
