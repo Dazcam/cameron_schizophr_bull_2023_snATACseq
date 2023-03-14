@@ -3,3 +3,11 @@ results/01CELLRANGER/
 resources/cellranger
 resources/fq
 workflow/.snakemake/
+.DS_Store
+resources/
+results/.DS_Store
+results/02ARCHR/
+results/03SIGNAC/
+results/04FRAGMENT_FILES/
+workflow/.DS_Store
+workflow/scripts/.DS_Store

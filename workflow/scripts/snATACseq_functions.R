@@ -188,7 +188,7 @@ create_archR_group_plot <- function(
   
   # Get the levels for type in the required order - https://stackoverflow.com/questions/22231124
   cnts_per_donor_melt$variable = factor(cnts_per_donor_melt$variable,
-                                        levels = SAMPLE_IDs)
+                                        levels = colnames(cM))
   cnts_per_donor_melt = arrange(cnts_per_donor_melt, Cluster, dplyr::desc(variable))
   
   # Calculate percentages
@@ -657,41 +657,73 @@ plot_UMAPs_by_marker_genes <- function(
 # This can't handle Harmony objects yet!!!!
 run_peak_calling <- function(
     
-  ARCHR_ID = NULL,
-  CLUSTERS_ID = NULL,
+  ARCHR_OBJ = archR,
+  CLUSTERS_ID = 'Clusters',
+  NEW_CLUSTERS_ID = NULL,
   NEW_LABELS = NULL,
   OLD_LABELS = NULL,
-  MACS2_PATH = NULL,
+  MACS2_PATH = MACS_PATH,
   FDR_THRESHOLD = 0.05,
   EXTEND_WINDOW = 250) {
+  
+  #' Run ArchR peak calling 
+  #' 
+  #' @description ArchR peak calling. Can support basic peak calling or post integration
+  #' peak calling where cell IDs are changed based on integration mapping. Will run basic
+  #' peak calling as default.
+  #' 
+  #' @param ARCHR_OBJ An ArchR object 
+  #' @param CLUSTERS_ID The col name of the Cluster ID set on which to call peaks
+  #' @param NEW_CLUSTERS_ID The col name of the new post-integration Cluster ID set 
+  #' @param NEW_LABELS A set of cell labels for the new cluster IDs
+  #' @param OLD_LABELS A set of cell labels for the old cluster IDs
+  #' @param MACS2_PATH The path of MACS2 exec.
+  #' @param FDR_THRESHOLD The FDR threshold to set for sig. peaks
+  #' @param EXTEND_WINDOW The extension in base pairs to add to each peak
   
   # Set macs2 path - note that you need to set the default python env to python 2
   
   cat(paste0('\nAssigning cell IDs to clusters for ', REGION, ' ... \n\n'))
-  archR.test <- ARCHR_ID
+  archR.test <- ARCHR_OBJ
   CLUSTERS <- unname(unlist(getCellColData(archR.test, CLUSTERS_ID)))
-  archR.test$Clusters_broad <- mapLabels(CLUSTERS, 
+  
+  if (is.null(NEW_CLUSTERS_ID)) {
+    
+    FINAL_ID <- CLUSTERS_ID
+    
+  } else {
+    
+  archR@cellColData[, NEW_CLUSTERS_ID] <- mapLabels(CLUSTERS, 
                                          newLabels = NEW_LABELS, 
                                          oldLabels = OLD_LABELS)
   
+  FINAL_ID <- NEW_CLUSTERS_ID
+  
+  }
+  
   cat(paste0('Create pseudo-bulk replicates for ', REGION, ' ... \n\n'))
-  archR.test <- addGroupCoverages(ArchRProj = archR.test, groupBy = "Clusters_broad", force = TRUE)
+  archR.test <- addGroupCoverages(ArchRProj = archR.test, groupBy = FINAL_ID, force = TRUE)
   
   cat(paste0('\nCalling peaks for ', REGION, ' ... \n'))
   archR.test <- addReproduciblePeakSet(
     ArchRProj = archR.test, 
-    groupBy = "Clusters_broad", 
+    groupBy = FINAL_ID, 
     pathToMacs2 = MACS2_PATH,
     cutOff = FDR_THRESHOLD, 
     extendSummits = EXTEND_WINDOW)
   
+  cat(paste0('\nAdding peak matrix to ', REGION, ' ... \n'))
+  archR.test <- addPeakMatrix(archR.test)
+  
+  getAvailableMatrices(ArchRProj = archR.test)
+  
   cat(paste0('\nCreate tables and plots for report ', REGION, ' ... \n'))
-  coverageParams <- archR.test@projectMetadata$GroupCoverages[["Clusters_broad"]]$Params
-  coverage_metadata <- archR.test@projectMetadata$GroupCoverages[["Clusters_broad"]]$coverageMetadata
+  coverageParams <- archR.test@projectMetadata$GroupCoverages[[FINAL_ID]]$Params
+  coverage_metadata <- archR.test@projectMetadata$GroupCoverages[[FINAL_ID]]$coverageMetadata
   maxPeaks_default <- 150000
   peaksPerCell_default <- 500
   
-  tableGroups <- table(getCellColData(archR.test, "Clusters_broad", drop = TRUE))
+  tableGroups <- table(getCellColData(archR.test, FINAL_ID, drop = TRUE))
   peakCallParams_summary_df <- lapply(seq_along(coverageParams$cellGroups), function(y){
     x <- coverageParams$cellGroups[[y]]
     uniq <- unique(unlist(x))
@@ -976,43 +1008,160 @@ threeway_venn <- function(venn_counts, name1, name2, name3) {
 # }
 
 
-run_archR2Signac <- function() {
+run_archR2Signac <- function(  
+    
+  ARCHR_OBJ = NULL,
+  FRAGMENTS_DIR = NULL) {
   
-  packages <- c("ArchR", "Seurat", "ArchRtoSignac", "Signac", 
+  #' Convert a ArchR object to a Signac object
+  #' 
+  #' @description Convert a ArchR object to a Signac object. ArchR object
+  #' must contain a peak set, 
+  #' 
+  #' @param ARCHR_OBJ: An ArchR object.
+  #' @param FRAGMENTS_DIR: Directory containing fragment files. The 
+  #' directory before "/outs/" in 10X cell ranger atac output for all samples.
+  #' @param SAMPLE_LIST: List of Sample names in the ArchR object.
+
+  library(ArchRtoSignac)
+  packages <- c("ArchR", "Seurat", "Signac", 
                 "stringr", "EnsDb.Hsapiens.v86") # required packages
   loadinglibrary(packages)
   
   # Obtain ArchRProject peak matrix for object conversion
-  archR <- loadArchRProject(path = paste0(ARCHR_DIR, 'GE/'))
-  pkm <- getPeakMatrix(archR) # proj is an ArchRProject
+  pkm <- getPeakMatrix(ARCHR_OBJ) # proj is an ArchRProject
   
   # Extract appropriate Ensembl gene annotation and convert to UCSC style.
-  # "UCSC" is the default style to change to but can be changed with argument seqStyle
-  annotations <- getAnnotation(reference = EnsDb.Hsapiens.v86, refversion = "hg38") 
+  annotations <<- getAnnotation(reference = EnsDb.Hsapiens.v86, refversion = "hg38") 
   
-  fragments_dir <- "../results/01CELLRANGER/" # the directory before "/outs/" for all samples
-  
+  cat('\nRun ArchR2Signac ... \n')
   seurat_atac <- ArchR2Signac(
-    ArchRProject = archR,
+    ArchRProject = ARCHR_OBJ,
     refversion = "hg38",
-    samples = list('14510_WGE_ATAC', '14611_WGE_ATAC', '14993_WGE_ATAC'), 
-    fragments_dir = fragments_dir,
-    pm = pkm, # peak matrix from getPeakMatrix()
-    fragments_fromcellranger = "Yes", # fragments_fromcellranger This is an Yes or No selection ("NO" | "N" | "No" or "YES" | "Y" | "Yes")
-    fragments_file_extension = NULL, # Default - NULL: File_Extension for fragments files (typically they should be '.tsv.gz' or '.fragments.tsv.gz')
-    annotation = annotations # annotation from getAnnotation()
+    fragments_dir = FRAGMENTS_DIR,
+    pm = pkm, 
+    fragments_fromcellranger = "Yes", 
+    fragments_file_extension = NULL,
+    annotation = annotations 
   )
   
-  gsm <- getGeneScoreMatrix(ArchRProject = archR, SeuratObject = seurat_atac)
+  gsm <- getGeneScoreMatrix(ArchRProject = ARCHR_OBJ, SeuratObject = seurat_atac)
   
   seurat_atac[['RNA']] <- CreateAssayObject(counts = gsm)
   
   seurat_atac <- addDimRed(
-    ArchRProject = archR,
+    ArchRProject = ARCHR_OBJ,
     SeuratObject = seurat_atac,
     addUMAPs = "UMAP",
     reducedDims = "IterativeLSI"
   ) # default is "IterativeLSI"
+  
+}
+
+signac_snRNAseq_integration <- function(
+    
+  SEURAT_OBJ = NULL,
+  PUBLIC_DATA = NULL,
+  SAMPLE_ID = NULL,
+  QUERY_REDUCTION = NULL) {
+  
+  #' Run Signac snRNAseq integration on GE data
+  #' 
+  #' @description Run Signac snRNAseq integration on GE data 
+  #' 
+  #' @param SEURAT_OBJ A Seurat object for chromatin data 
+  #' @param PUBLIC_DATA A GE public dataset to use for integration. Choices
+  #' Shi or Cameron.
+  #' @param SAMPLE_ID The sample ID for the Seurat object
+  #' @param QUERY_REDUCTION Name of the dim reduction used for query dataset
+  
+  tic()
+  
+  SHI_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/'
+  CAMERON_DIR <- '~/Desktop/fetal_brain_snRNAseq_110122/resources/R_objects/'
+  DefaultAssay(SEURAT_OBJ) <- "RNA"
+  
+  cat('\nRunning integration for', SAMPLE_ID, '...')
+  
+  if (PUBLIC_DATA == 'Shi') {
+    
+    cat('\nGenerating Seurat object for Shi data ...\n\n')
+    source(paste0(SHI_DIR, 'snRNAseq_GE_prep_shi_data_for_Seurat.R'))
+    seurat.pub <- CreateSeuratObject(counts = shi_data, meta.data = shi_meta)
+    seurat.pub <- NormalizeData(seurat.pub)
+    seurat.pub <- FindVariableFeatures(seurat.pub, selection.method = "vst", nfeatures = 2000)
+    seurat.pub <- RunFastMNN(object.list = SplitObject(seurat.pub, split.by = "pcw"))
+    seurat.pub <- RunUMAP(seurat.pub, reduction = "mnn", dims = 1:10)
+    seurat.pub <- FindNeighbors(seurat.pub, reduction = "mnn", dims = 1:10)
+    seurat.pub <- FindClusters(seurat.pub, resolution = 0.5)
+    DefaultAssay(seurat.pub) <- "mnn.reconstructed"
+    
+  } else {
+    
+    cat('\nLoading Seurat object for Cameron data ...\n\n')
+    seurat.pub <- readRDS(paste0(CAMERON_DIR, 'seurat.wge.final.rds'))
+    seurat.pub$ClusterID <- seurat.pub$cellIDs
+    
+  }
+  
+  cat('\nRunning CCA ...\n\n')  
+  transfer.anchors <- FindTransferAnchors(
+    reference = seurat.pub,
+    query = SEURAT_OBJ,
+    reduction = 'cca'
+  )
+  
+  cat('\nTranferring labels  ...\n\n')
+  predicted.labels <- TransferData(
+    anchorset = transfer.anchors,
+    refdata = seurat.pub$ClusterID,
+    weight.reduction = SEURAT_OBJ[[QUERY_REDUCTION]],
+    dims = 2:30
+  )
+  
+  SEURAT_OBJ <- AddMetaData(object = SEURAT_OBJ, metadata = predicted.labels)
+  
+  if (PUBLIC_DATA == 'Shi') {
+    
+    SEURAT_OBJ$predicted.id.shi <- SEURAT_OBJ$predicted.id
+    
+  } else {
+    
+    SEURAT_OBJ$predicted.is.cam <- SEURAT_OBJ$predicted.id
+    
+  }
+  
+  plot1 <- DimPlot(
+    object = seurat.pub,
+    group.by = 'ClusterID',
+    label = TRUE,
+    repel = TRUE) + NoLegend() + ggtitle('scRNA-seq')
+  
+  plot2 <- DimPlot(
+    object = SEURAT_OBJ,
+    group.by = 'predicted.id',
+    label = TRUE,
+    repel = TRUE) + NoLegend() + ggtitle('scATAC-seq')
+  
+  PLOT <- plot1 + plot2
+  
+  if (PUBLIC_DATA == 'Shi') {
+    
+    assign(paste0('seurat_int_', SAMPLE_ID), SEURAT_OBJ, .GlobalEnv)
+    assign(paste0('rna_int_plot_shi_', SAMPLE_ID), PLOT, .GlobalEnv)
+    cat('\nReturned: seurat_obj_int_', SAMPLE_ID,
+        'rna_int_plot_shi_', SAMPLE_ID, sep = '')
+    
+  } else {
+    
+    assign(paste0('seurat_int_', SAMPLE_ID), SEURAT_OBJ, .GlobalEnv)
+    assign(paste0('rna_int_plot_cam_', SAMPLE_ID), PLOT, .GlobalEnv)
+    cat('\nReturned: seurat_int_', SAMPLE_ID,
+        'rna_int_plot_cam_', SAMPLE_ID, '\n', sep = '')
+    
+  }
+  
+  toc(func.toc=toc_min)
   
 }
 

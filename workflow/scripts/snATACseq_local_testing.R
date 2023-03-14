@@ -16,19 +16,22 @@ library(plyr)
 library(gtools)
 library(BSgenome.Hsapiens.UCSC.hg38) # For peak calling
 library(readxl)
+library(ArchRtoSignac)
 
 ## Load env variables  ----------------------------------------------------------------
-SCRIPT_DIR <- '~/Desktop/fetal_brain_snATACseq_091222/workflow/scripts/'
-BATCH_VARS <- c('Sample', 'Age', 'Prep', 'Region', 'Study')
-REGION <- 'FC'
-SET_FILTER <- 'ziffra_only_default'
+SCRIPT_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/workflow/scripts/'
+RESULTS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/'
+FRAGS_DIR <- paste0(RESULTS_DIR, '04FRAGMENT_FILES/')
+ARCHR_DIR <- paste0(RESULTS_DIR, '02ARCHR/')
+REGION <- 'GE'
+SET_FILTER <- NULL
 
 MAX_CLUSTERS <- 6
 VAR_FEATURES <- 25000
 N_START <- 10
 
 RUN_HARMONY <- TRUE
-COVARIATES <- c('Sample', 'Prep')
+COVARIATES <- c('Sample')
 RUN_INTEGRATION <- TRUE
 
 MARKER_GENES <-  c('SLC17A7', # ExN
@@ -41,125 +44,95 @@ MARKER_GENES <-  c('SLC17A7', # ExN
                    'OLIG1', 'OLIG2', # OPC
                    'ITM2A') # Endothelial
 
-if (REGION == "FC") {
+SAMPLES <- c("14510_WGE_ATAC", "14611_WGE_ATAC", "14993_WGE_ATAC")
   
-  SAMPLES <- c("14510_PFC_ATAC", "14611_PFC_ATAC", "14993_PFC_ATAC_AGGR",
-               "GW17_Cortex", "Cortex_GW18_Frozen", "Cortex_GW21_Fresh",
-               "PFC_GW20_SC", "PFC_Twin34_Frozen", "Twin31_PFC")
+SAMPLE_IDs <- SAMPLES %>% 
+  str_remove("14|_ATAC") %>% 
+  str_replace("510_WGE", "GE_510") %>%
+  str_replace("611_WGE", "GE_611") %>%
+  str_replace("993_WGE", "GE_993") 
   
-  SAMPLE_IDs <- SAMPLES %>% 
-    str_remove("14") %>% 
-    str_remove("win|W") %>% 
-    str_remove("_Frozen|_Fresh|_SC|_ATAC_AGGR|_ATAC") %>% 
-    str_replace("Cortex", "CTX") %>%
-    str_replace("510_PFC", "PFC_510") %>%
-    str_replace("611_PFC", "PFC_611") %>%
-    str_replace("993_PFC", "PFC_993") %>%
-    str_replace("G17_CTX", "CTX_G17") %>%
-    str_replace("T31_PFC", "PFC_T31")
-  
-  
-} else {
-  
-  SAMPLES <- c("14510_WGE_ATAC", "14611_WGE_ATAC", "14993_WGE_ATAC", 
-               "MGE_GW20_SC", "MGE_Twin34_Frozen")
-  
-  SAMPLE_IDs <- SAMPLES %>% 
-    str_remove("win") %>% 
-    str_remove("14") %>% 
-    str_remove("_Frozen|_SC|_ATAC") %>%
-    str_replace("MGE_GW20", "MGE_G20") %>%
-    str_replace("510_WGE", "WGE_510") %>%
-    str_replace("611_WGE", "WGE_611") %>%
-    str_replace("993_WGE", "WGE_993") 
-  
-} 
 
 ## Load functions  --------------------------------------------------------------------
 source(paste0(SCRIPT_DIR, 'snATACseq_functions.R'))
+source(paste0(SCRIPT_DIR, 'snATACseq_signac_local_functions.R'))
 
 ## Load and prep archR project  -------------------------------------------------------
-archR <- loadArchRProject(path ='/Users/darren/Desktop/temp/snATACseq/FC')  
+archR <- loadArchRProject(paste0(ARCHR_DIR, 'GE'))  
 
-## Subset by cell names  --------------------------------------------------------------
-archR$log10nFrags <- log10(archR$nFrags)
+## Filter samples  --------------------------------------------------------------------
+if (is.null(SET_FILTER)) {
+  
+  print('\nNo filtering specification set. Skipping filtering ...\n')
+  
+} else {
+  
+  archR$log10nFrags <- log10(archR$nFrags)
+  
+  # Counts before trim
+  cnts_preTrim_df <- as_tibble(table(archR$Sample), .name_repair = make.names) %>%
+    dplyr::rename("Sample" = "X","cnts_preTrim" = "n")
+  
+  # Set hard trim levels for tss and frags
+  all_pass <- set_filter_params(SET_FILTER)
+  cellsPass <- archR$cellNames[all_pass]
+  archR.trim <- archR[cellsPass, ]
+  
+  cnts_postTrim_df <- as_tibble(table(archR.trim$Sample), .name_repair = make.names) %>%
+    dplyr::rename("Sample" = "X",
+           "cnts_postTrim" = "n") %>%
+    left_join(cnts_preTrim_df) %>%
+    relocate(Sample, cnts_preTrim, cnts_postTrim) %>%
+    janitor::adorn_totals("row")
 
-# Counts before trim
-cnts_preTrim_df <- as_tibble(table(archR$Sample), .name_repair = make.names) %>%
-  dplyr::rename("Sample" = "X","cnts_preTrim" = "n")
-
-# Set hard trim levels for tss and frags
-all_pass <- set_filter_params(SET_FILTER)
-cellsPass <- archR$cellNames[all_pass]
-archR.trim <- archR[cellsPass, ]
-
-cnts_postTrim_df <- as_tibble(table(archR.trim$Sample), .name_repair = make.names) %>%
-  dplyr::rename("Sample" = "X",
-         "cnts_postTrim" = "n") %>%
-  left_join(cnts_preTrim_df) %>%
-  relocate(Sample, cnts_preTrim, cnts_postTrim) %>%
-  janitor::adorn_totals("row")
+}
 
 ##  Run Cluster analysis  -------------------------------------------------------------
-run_cluster_analysis(ARCHR_ID = archR.trim)
+# run_cluster_analysis(ARCHR_ID = archR) - done on hawk
 
-create_archR_group_plot(archR.2, 'Clusters', 'UMAP')
-create_umap_batch_plots(archR.2, 'Clusters', 'UMAP')
-plot_UMAPs_by_marker_genes(archR.2, 'UMAP', MARKER_GENES)
+create_archR_group_plot(archR, 'Clusters', 'UMAP')
+plot_UMAPs_by_marker_genes(archR, 'UMAP', MARKER_GENES)
 
 
 ##  Run Harmony -----------------------------------------------------------------------
 if(RUN_HARMONY) {
   
-  COVARIATES <- c('Sample', 'Prep')
-  run_cluster_analysis(ARCHR_ID = archR.2, 
+  run_cluster_analysis(ARCHR_ID = archR, 
                        HARMONY_NAME = 'Harmony',
                        COVARIATE = COVARIATES)
 
   create_archR_group_plot(archR.3, 'Clusters_Harmony', 'UMAPHarmony')
-  create_umap_batch_plots(archR.3, 'Clusters_Harmony', 'UMAPHarmony')
   plot_UMAPs_by_marker_genes(archR.3, 'UMAPHarmony', MARKER_GENES)
 
 }
 
-##  Run unconstrained integration   ----------------------------------------------------
-if(RUN_INTEGRATION) {
-  
-  SEURAT_DIR <- '~/Desktop/fetal_brain_snRNAseq_110122/resources/R_objects/'
-  seurat.pfc <- readRDS(paste0(SEURAT_DIR, 'seurat.pfc.final.rds'))
-  run_unconstrained_intergration(archR.2, 'Clusters', 'UMAP', 'IterativeLSI', seurat.pfc)
-  
-  if(RUN_HARMONY) {
-    
-    run_unconstrained_intergration(archR.3, 'Clusters_Harmony', 
-                                   'UMAPHarmony', 'Harmony', seurat.pfc)
-    
-  }
-  
-}
 
 ##  Run peak calling   -----------------------------------------------------------------
-RUN_PEAK_CALLING <- TRUE
-RUN_ZIFFRA_COMPARE <- TRUE
+# Note running peak calling on default clusters first so new_cellIDs = old_cellIDs
+# Need a peak matrix before running archR to Signac
 ENV_PATH <- "/Users/darren/opt/miniconda3/envs/p2_macs"
 MACS_PATH <- "/Users/darren/opt/miniconda3/envs/p2_macs/bin/macs2"
 reticulate::use_condaenv(ENV_PATH) 
-new_cellIDs_frags_3.5 <- c("FC-RG", "FC-RG", "FC-InN", "FC-InN", "FC-InN", 
-                           "FC-InN", "FC-InN", "FC-InN", "FC-OPC", "FC-IP", 
-                           "FC-ExN-UL", "FC-ExN-UL", "FC-ExN-UL", "FC-ExN-UL", "FC-ExN-UL", 
-                           "FC-ExN-DL", "FC-MG", "FC-ExN-UL", "FC-ExN-UL", "FC-ExN-UL",
-                           "FC-ExN-DL", "FC-ExN-DL", "FC-Undef", "FC-Undef", "FC-Undef")
+new_cellIDs <- gtools::mixedsort(unique(archR$Clusters))
+run_peak_calling()
 
-run_peak_calling(archR.2, 'Clusters',
-                 new_cellIDs_frags_3.5, 
-                 gtools::mixedsort(unique(archR.2$Clusters)),
-                 MACS_PATH, 0.05, 250)
-
-create_archR_group_plot(archR.4, 'Clusters_broad', 'UMAP')
-create_umap_batch_plots(archR.4, 'Clusters_broad', 'UMAP')
+peakCallParams_summary_df_default <- peakCallParams_summary_df
+peak_call_summary_plot_default <- peak_call_summary_plot
 
 ## ArchR to Signac  -------------------------------------------------------------------
-seurat_atac <- readRDS(paste0(R_DIR, 'seurat_atac.rds'))
+# To save hassle match archR$Sample IDs to the Cellranger sample out files
+run_archR2Signac(archR.4, FRAGS_DIR)
+
+cat('\nRun ArchR2Signac ... \n')
+seurat_atac <- ArchR2Signac(
+  ArchRProject = archR.4,
+  refversion = "hg38",
+  fragments_dir = FRAGS_DIR,
+  pm = pkm, 
+  fragments_fromcellranger = "Yes", 
+  fragments_file_extension = NULL,
+  annotation = annotations 
+)
 
 # Run integration
 signac_snRNAseq_integration(seurat_atac, 'Shi', 'seurat_atac', 'IterativeLSI')
