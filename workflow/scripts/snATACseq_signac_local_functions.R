@@ -165,7 +165,7 @@ signac_snRNAseq_integration <- function(
   #' @param SAMPLE_ID The sample ID for the Seurat object
   #' @param QUERY_REDUCTION Name of the dim reduction used for query dataset
   
-  tic()
+  #tic()
   
   SHI_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/'
   CAMERON_DIR <- '~/Desktop/fetal_brain_snRNAseq_110122/resources/R_objects/'
@@ -251,7 +251,7 @@ signac_snRNAseq_integration <- function(
     
   }
 
-  toc(func.toc=toc_min)
+  #toc(func.toc=toc_min)
   
 }
 

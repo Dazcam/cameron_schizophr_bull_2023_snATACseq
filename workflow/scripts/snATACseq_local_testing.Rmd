@@ -23,65 +23,22 @@ snATAC ArchR local testing.
 ArchR pre-filters the cells using 2 metrics TSS Enrichment and min frags per cell. These were set to defaults and then filtered to get rid of putative debris. See 'Post filter' tab in 'TSS vs. Frags' for filtered plots.
 
   + TSS Enrichment > 4
-  + Min frags per cell > 1000
-  + Filter: `r SET_FILTER`
-  + Run Harmony: `r RUN_HARMONY`
-  + Covariates: `r COVARIATES`
-  + Run integration: `r RUN_INTEGRATION`
-  + Run Peak calling: `r RUN_PEAK_CALLING`
-  + Run Ziffra compare: `r RUN_ZIFFRA_COMPARE`
+  + Min frags per cell > 3000
 
 ***
 
 #### **Counts**
 
 ```{R, filt_cells_dropped, echo=FALSE}
-knitr::kable(cnts_postTrim_df)
+knitr::kable(cell_cnts)
 ```
 
 ***
 
-#### **TSS vs. Frags** {.tabset}
-
-##### **Pre filter**
-
-```{R, tssVsFrags_Pre, echo=FALSE, results=FALSE, fig.height = 10, fig.width = 10}
-print(print_tss_frag_plot(archR))
-```
-
-***
-
-##### **Post filter**
-
-```{R, tssVsFrags_post, echo=FALSE, results=FALSE, fig.height = 10, fig.width = 10}
-#print(print_tss_frag_plot(archR.2))
-```
-
-***
-
-#### **Cluster plots** {.tabset}
-
-##### **Pre batch cor**
-
-
-```{R, Clusters_batch_pre, echo=FALSE, fig.height = 10, fig.width = 10}
-print(plot_grid(plotlist = UMAP_batch_plot_list_Clusters, align = 'hv'))
-```
-
-***
-
-##### **Post batch cor**
-
-
-```{R, Clusters_batch_post, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_HARMONY}
-print(plot_grid(plotlist = UMAP_batch_plot_list_Clusters_Harmony, align = 'hv'))
-```
-
-***
 
 #### **Group plot** {.tabset}
 
-##### **Pre batch cor**
+##### **Raw**
 
 
 ```{R, group_plot_pre, echo=FALSE, fig.height = 10, fig.width = 10}
@@ -90,184 +47,182 @@ print(group_plot_Clusters)
 
 ***
 
-##### **Post batch cor**
+##### **Harmony**
 
 
-```{R, group_plot_post, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_HARMONY}
+```{R, group_plot_post, echo=FALSE, fig.height = 10, fig.width = 10}
 print(group_plot_Clusters_Harmony)
 ```
 
 ***
 
-#### **UMAPs by gene** {.tabset}
+##### **50**
 
-##### **Pre batch cor**
 
-***
-
-```{R, umap_by_gene_pre, echo=FALSE, fig.height = 10, fig.width = 10}
-print(all_genes_UMAP)
+```{R, group_plot_50, echo=FALSE, fig.height = 10, fig.width = 10}
+print(group_plot_50)
 ```
 
 ***
 
-##### **Post batch cor**
+##### **60**
 
-***
 
-```{R, umap_by_gene_post, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_HARMONY}
-print(all_genes_UMAP_Harmony)
+```{R, group_plot_60, echo=FALSE, fig.height = 10, fig.width = 10}
+print(group_plot_60)
 ```
 
 ***
 
+##### **50**
+
+
+```{R, group_plot_75, echo=FALSE, fig.height = 10, fig.width = 10}
+print(group_plot_75)
+```
+
+***
 
 #### **Integration** {.tabset}
 
-##### **Pre batch cor**
+##### **UMAP compare** {.tabset}
 
-**UMAP**
+###### **RNA vs ATAC**
 
 ***
 
-```{R, int_umap_pre, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_INTEGRATION}
-print(compare_UMAP_plot_Clusters)
+```{R, int_umap, echo=FALSE, fig.height = 10, fig.width = 10}
+print(rna_int_plot_shi_seurat_atac)
 ```
 
+###### **50**
+
 ***
 
-**Counts**
-
-```{R, int_cm_pre, echo=FALSE, fig.height = 5, fig.width = 5, eval=RUN_INTEGRATION}
-print(clust_CM_geneExp_Clusters)
+```{R, umap_50, echo=FALSE, fig.height = 10, fig.width = 10}
+print(UMAP_compare_50)
 ```
 
+###### **60**
+
 ***
 
-**Cells**
-
-```{R, int_cells_pre, echo=FALSE, eval=RUN_INTEGRATION}
-knitr::kable(integration_df_Clusters)
+```{R, umap_60, echo=FALSE, fig.height = 10, fig.width = 10}
+print(UMAP_compare_60)
 ```
 
-***
-
-##### **Post batch cor**
-
-**UMAP**
+###### **75**
 
 ***
 
-```{R, int_umap_post, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_INTEGRATION}
-print(compare_UMAP_plot_Clusters_Harmony)
+```{R, umap_75, echo=FALSE, fig.height = 10, fig.width = 10}
+print(UMAP_compare_75)
 ```
-
-***
-
-**Counts**
-
-```{R, int_cm_pos, echo=FALSE, fig.height = 5, fig.width = 5, eval=RUN_INTEGRATION}
-print(clust_CM_geneExp_Clusters_Harmony)
-```
-
-***
-
-**Cells**
-
-```{R, int_cells_pos, echo=FALSE, eval=RUN_INTEGRATION}
-knitr::kable(integration_df_Clusters_Harmony)
-```
-
-***
 
 
 #### **Peak calling** {.tabset}
 
-##### **Input params**
+##### **Input params** {.tabset}
+
+###### **Raw**
 
 ***
 
-```{R, Peaks_input_params, echo=FALSE, eval=RUN_PEAK_CALLING}
-knitr::kable(peakCallParams_summary_df)
+```{R, Peaks_input_params_Clusters, echo=FALSE}
+knitr::kable(peakCallParams_summary_df_Clusters)
+```
+
+***
+
+###### **Pred**
+
+
+```{R, Peaks_input_params_Clusters_pred, echo=FALSE}
+knitr::kable(peakCallParams_summary_df_Clusters_pred)
+```
+
+***
+
+###### **50**
+
+***
+
+```{R, Peaks_input_params_50, echo=FALSE}
+knitr::kable(peakCallParams_summary_df_50)
+```
+
+***
+
+###### **60**
+
+***
+
+```{R, Peaks_input_params_60, echo=FALSE}
+knitr::kable(peakCallParams_summary_df_60)
+```
+
+***
+
+###### **75**
+
+***
+
+```{R, Peaks_input_params_75, echo=FALSE}
+knitr::kable(peakCallParams_summary_df_75)
 ```
 
 ***
 
 
-##### **Peak summary plot**
+##### **Summary plot** {.tabset}
+
+###### **Raw**
 
 ***
 
-```{R, Peaks_summary_plot, echo=FALSE, eval=RUN_PEAK_CALLING}
-peak_call_summary_plot
+```{R, Peaks_summary_plot_raw, echo=FALSE}
+peak_call_summary_plot_Clusters
 ```
 
 ***
 
-
-##### **Group plot**
+###### **Predicted**
 
 ***
 
-```{R, peaks_UMAP_broad, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_PEAK_CALLING}
-group_plot_Clusters_broad 
+```{R, Peaks_summary_plot_predicted, echo=FALSE}
+peak_call_summary_plot_Clusters_pred
 ```
 
 ***
 
-##### **Cluster plots**
+###### **50**
 
+***
 
-```{R, peaks_clusters, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_PEAK_CALLING}
-print(plot_grid(plotlist = UMAP_batch_plot_list_Clusters_broad, align = 'hv'))
+```{R, Peaks_summary_plot_50, echo=FALSE}
+peak_call_summary_plot_50
 ```
 
 ***
 
-#### **Ziffra compare** {.tabset}
-
-##### **Peak overlap**
+###### **60**
 
 ***
 
-![](../../../venn_frags_3.5.png) 
-
-```{R, Peaks_overlap, echo=FALSE, fig.height = 5, fig.width = 5, results = 'markup', eval=RUN_ZIFFRA_COMPARE}
-
+```{R, Peaks_summary_plot_60, echo=FALSE}
+peak_call_summary_plot_60
 ```
 
 ***
 
-##### **Motif Cameron**
+###### **75**
 
 ***
 
-```{R, peaks_overlap_cameron, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_ZIFFRA_COMPARE}
-plotMotifHeatmaps(x = cameron_motif_obj[cameron_motif_obj_sig], 
-                                        which.plots = c("log2enr", "negLog10Padj"), 
-                                        width = 1.8, maxEnr = 2, maxSig = 100,
-                                        show_seqlogo = TRUE) 
+```{R, Peaks_summary_plot_75, echo=FALSE}
+peak_call_summary_plot_75
 ```
 
 ***
 
-```{R, peaks_overlap_cameron_top_50, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_ZIFFRA_COMPARE}
-knitr::kable(cameron_motif_df, n = 50)
-```
-
-##### **Motif Ziffra**
-
-***
-
-```{R, peaks_overlap_ziffra, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_ZIFFRA_COMPARE}
-plotMotifHeatmaps(x = ziffra_motif_obj[ziffra_motif_obj_sig], 
-                                        which.plots = c("log2enr", "negLog10Padj"), 
-                                        width = 1.8, maxEnr = 2, maxSig = 350,
-                                        show_seqlogo = TRUE) 
-```
-
-***
-
-```{R, peaks_overlap_ziffra_top_50, echo=FALSE, fig.height = 10, fig.width = 10, eval=RUN_ZIFFRA_COMPARE}
-knitr::kable(ziffra_motif_df, n = 50)
-```

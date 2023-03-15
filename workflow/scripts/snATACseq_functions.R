@@ -685,8 +685,7 @@ run_peak_calling <- function(
   # Set macs2 path - note that you need to set the default python env to python 2
   
   cat(paste0('\nAssigning cell IDs to clusters for ', REGION, ' ... \n\n'))
-  archR.test <- ARCHR_OBJ
-  CLUSTERS <- unname(unlist(getCellColData(archR.test, CLUSTERS_ID)))
+  CLUSTERS <- unname(unlist(getCellColData(ARCHR_OBJ, CLUSTERS_ID)))
   
   if (is.null(NEW_CLUSTERS_ID)) {
     
@@ -694,16 +693,15 @@ run_peak_calling <- function(
     
   } else {
     
-  archR@cellColData[, NEW_CLUSTERS_ID] <- mapLabels(CLUSTERS, 
+    ARCHR_OBJ@cellColData[, NEW_CLUSTERS_ID] <- mapLabels(CLUSTERS, 
                                          newLabels = NEW_LABELS, 
                                          oldLabels = OLD_LABELS)
-  
-  FINAL_ID <- NEW_CLUSTERS_ID
+    FINAL_ID <- NEW_CLUSTERS_ID
   
   }
   
   cat(paste0('Create pseudo-bulk replicates for ', REGION, ' ... \n\n'))
-  archR.test <- addGroupCoverages(ArchRProj = archR.test, groupBy = FINAL_ID, force = TRUE)
+  archR.test <- addGroupCoverages(ArchRProj = ARCHR_OBJ, groupBy = FINAL_ID, force = TRUE)
   
   cat(paste0('\nCalling peaks for ', REGION, ' ... \n'))
   archR.test <- addReproduciblePeakSet(
@@ -756,10 +754,13 @@ run_peak_calling <- function(
     xlab("") +
     ylab(expression("No. of Peaks"~(x10^{"3"})))
   
-  assign('archR.4', archR.test, .GlobalEnv)
-  assign('peakCallParams_summary_df', peakCallParams_summary_df, .GlobalEnv)
-  assign('peak_call_summary_plot', peak_call_summary_plot, .GlobalEnv)
-  cat('\nReturned: archR.4, peakCallParams_summary_df, peak_call_summary_plot.\n')
+  assign(paste0('archR_pks_', FINAL_ID), archR.test, .GlobalEnv)
+  assign(paste0('peakCallParams_summary_df_', FINAL_ID), peakCallParams_summary_df, .GlobalEnv)
+  assign(paste0('peak_call_summary_plot_', FINAL_ID), peak_call_summary_plot, .GlobalEnv)
+  cat('\nReturned:',
+      paste0('archR_pks_', FINAL_ID), '\n',
+      paste0('peakCallParams_summary_df_', FINAL_ID), '\n',
+      paste0('peak_call_summary_plot_', FINAL_ID),'\n')
   
 }
 
@@ -1033,7 +1034,7 @@ run_archR2Signac <- function(
   pkm <- getPeakMatrix(ARCHR_OBJ) # proj is an ArchRProject
   
   # Extract appropriate Ensembl gene annotation and convert to UCSC style.
-  annotations <<- getAnnotation(reference = EnsDb.Hsapiens.v86, refversion = "hg38") 
+  annotations <- getAnnotation(reference = EnsDb.Hsapiens.v86, refversion = "hg38") 
   
   cat('\nRun ArchR2Signac ... \n')
   seurat_atac <- ArchR2Signac(
@@ -1057,6 +1058,8 @@ run_archR2Signac <- function(
     reducedDims = "IterativeLSI"
   ) # default is "IterativeLSI"
   
+  return(seurat_atac)
+  
 }
 
 signac_snRNAseq_integration <- function(
@@ -1076,7 +1079,7 @@ signac_snRNAseq_integration <- function(
   #' @param SAMPLE_ID The sample ID for the Seurat object
   #' @param QUERY_REDUCTION Name of the dim reduction used for query dataset
   
-  tic()
+  #tic() - parent package clashes with addReproduciblePeaks
   
   SHI_DIR <- '~/Desktop/fetal_brain_snRNAseq_GE_270922/workflow/scripts/'
   CAMERON_DIR <- '~/Desktop/fetal_brain_snRNAseq_110122/resources/R_objects/'
@@ -1158,11 +1161,11 @@ signac_snRNAseq_integration <- function(
     assign(paste0('seurat_int_', SAMPLE_ID), SEURAT_OBJ, .GlobalEnv)
     assign(paste0('rna_int_plot_cam_', SAMPLE_ID), PLOT, .GlobalEnv)
     cat('\nReturned: seurat_int_', SAMPLE_ID,
-        'rna_int_plot_cam_', SAMPLE_ID, '\n', sep = '')
+        ' rna_int_plot_cam_', SAMPLE_ID, '\n\n', sep = '')
     
   }
   
-  toc(func.toc=toc_min)
+  # toc(func.toc=toc_min)
   
 }
 
