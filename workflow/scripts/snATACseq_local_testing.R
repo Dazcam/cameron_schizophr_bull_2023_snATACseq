@@ -6,6 +6,8 @@
 
 ## Load packages  ---------------------------------------------------------------------
 library(ArchR)
+library(Seurat)
+library(Signac)
 library(pheatmap)
 library(tidyverse)
 library(rmarkdown)
@@ -119,15 +121,19 @@ for (SCORE in c('50', '60', '75')) {
   
   SEURAT_META <- SEURAT_OBJ[[]]
   
+  SEURAT_ID_BY_SAMP <- SEURAT_META %>%
+    group_by(Sample) %>%
+    count(predicted.id) %>%
+    spread(Sample, n)
+  
   PRED_ID_SCORE <- table(SEURAT_META$predicted.id) 
   SAMPLE_CNT <- table(SEURAT_META$Sample) 
-  
-  CELL_IDs <- rownames(SEURAT_OBJ)
   
   assign(paste0('umap', SCORE), UMAP, .GlobalEnv)
   assign(paste0('pred_id_score_', SCORE), PRED_ID_SCORE, .GlobalEnv)
   assign(paste0('sample_cnt_', SCORE), SAMPLE_CNT, .GlobalEnv)
-  assign(paste0('cell_ID_', SCORE), CELL_IDs, .GlobalEnv) 
+  assign(paste0('seurat_meta_', SCORE), SEURAT_META, .GlobalEnv)
+  assign(paste0('seurat_id_by_sample_', SCORE), SEURAT_ID_BY_SAMP, .GlobalEnv)
   
 } 
 
@@ -146,7 +152,7 @@ umap_pred_score <- FeaturePlot(
   object = seurat_int_seurat_atac,
   features = 'prediction.score.max') + ggtitle('pred-score')
 
-plot_grid(umap_archR, umap_pred_id, umap_pred_score, 
+umap_pred_score <- plot_grid(umap_archR, umap_pred_id, umap_pred_score, 
           umap50, umap60, umap75)
 
 

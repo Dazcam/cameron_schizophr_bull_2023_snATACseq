@@ -83,9 +83,19 @@ print(group_plot_75)
 
 ***
 
+##### **Pred_score**
+
+
+```{R, ped_score_plot, echo=FALSE, fig.height = 10, fig.width = 10}
+print(umap_pred_score)
+```
+
+***
+
+
 #### **Integration** {.tabset}
 
-##### **UMAP compare** {.tabset}
+##### **UMAP compare / counts** {.tabset}
 
 ###### **RNA vs ATAC**
 
@@ -103,6 +113,22 @@ print(rna_int_plot_shi_seurat_atac)
 print(UMAP_compare_50)
 ```
 
+***
+
+```{R, samp_id_cnts_50, echo=FALSE, fig.height = 10, fig.width = 10}
+knitr::kable(sample_cnt_50)
+```
+
+***
+
+```{R, samp_cnts_50, echo=FALSE, fig.height = 10, fig.width = 10}
+knitr::kable(seurat_id_by_sample_50)
+```
+
+***
+
+
+
 ###### **60**
 
 ***
@@ -110,6 +136,20 @@ print(UMAP_compare_50)
 ```{R, umap_60, echo=FALSE, fig.height = 10, fig.width = 10}
 print(UMAP_compare_60)
 ```
+
+***
+
+```{R, samp_id_cnts_60, echo=FALSE, fig.height = 10, fig.width = 10}
+knitr::kable(sample_cnt_60)
+```
+
+***
+
+```{R, counts_60, echo=FALSE, fig.height = 10, fig.width = 10}
+knitr::kable(seurat_id_by_sample_60)
+```
+
+***
 
 ###### **75**
 
@@ -119,6 +159,19 @@ print(UMAP_compare_60)
 print(UMAP_compare_75)
 ```
 
+***
+
+```{R, samp_id_cnts_75, echo=FALSE, fig.height = 10, fig.width = 10}
+knitr::kable(sample_cnt_75)
+```
+
+***
+
+```{R, counts_75, echo=FALSE, fig.height = 10, fig.width = 10}
+knitr::kable(seurat_id_by_sample_75)
+```
+
+***
 
 #### **Peak calling** {.tabset}
 
