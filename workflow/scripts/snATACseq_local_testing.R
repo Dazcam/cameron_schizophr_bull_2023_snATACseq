@@ -26,8 +26,10 @@ library(SeuratWrappers) # For RunFastMNN used during integration
 ## Load env variables  ----------------------------------------------------------------
 SCRIPT_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/workflow/scripts/'
 RESULTS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/'
-FRAGS_DIR <- paste0(RESULTS_DIR, '04FRAGMENT_FILES/')
 ARCHR_DIR <- paste0(RESULTS_DIR, '02ARCHR/')
+FRAGS_DIR <- paste0(RESULTS_DIR, '04FRAGMENT_FILES/')
+PEAKS_DIR <- paste0(RESULTS_DIR, '05PEAKS/')
+
 REGION <- 'GE'
 SET_FILTER <- NULL
 
@@ -103,12 +105,12 @@ seurat_atac <- run_archR2Signac(archR_pks_Clusters, FRAGS_DIR)
 signac_snRNAseq_integration(seurat_atac, 'Shi', 'seurat_atac', 'IterativeLSI')
 
 # Assess integration using integration prediction score  ------------------------------
-# Subset based on integration prediction score
-seurat_atac_75 <- subset(seurat_int_seurat_atac, prediction.score.max >= 0.75)
-seurat_atac_60 <- subset(seurat_int_seurat_atac, prediction.score.max >= 0.60)
+# Subset based on integration prediction score - Going with prediction.score.max >= 0.50
 seurat_atac_50 <- subset(seurat_int_seurat_atac, prediction.score.max >= 0.50)
-
-for (SCORE in c('50', '60', '75')) {
+seurat_atac_50 <- subset(x = seurat_atac_50, 
+                         subset = predicted.id %in% c('LGE', 'MGE', 'CGE', 'progenitor'))
+                                            
+for (SCORE in c('50')) {
   
   SEURAT_OBJ <- get(paste0('seurat_atac_', SCORE))
   
@@ -165,15 +167,9 @@ seurat_meta %>%
   summarise(mean_score = mean(prediction.score.max), 
             median_score = median(prediction.score.max))
 
-plotEmbedding(ArchRProj = archR_50, colorBy = "cellColData", 
-              name = CLUSTERS_ID, 
-              embedding = UMAP_ID,
-              plotAs = 'points') + ggtitle('Clusters')
-
-
 ##  Subset ArchR object
 # Note that ArchR has a # between sample and cell ID and Signac uses _
-for (SCORE in c('50', '60', '75')) {
+for (SCORE in c('50')) {
   
   cat('\nSubsetting ArchR object based on Signac int pred cut off:', SCORE, '\n')
   SEURAT_OBJ <- get(paste0('seurat_atac_', SCORE))
@@ -213,7 +209,7 @@ for (SCORE in c('50', '60', '75')) {
 }
 
 # Run peak calling only archR subsets
-for (SCORE in c('50', '60', '75')) {
+for (SCORE in c('50')) {
   
   cat('\nRunning peaks on ArchR object: ArchR_', SCORE, '\n', sep = '')
   ARCHR_OBJECT <- get(paste0('archR_', SCORE))
@@ -223,7 +219,7 @@ for (SCORE in c('50', '60', '75')) {
   if (SCORE == 50) {
     
     new_names <- c('LGE', 'LGE', 'Progenitor', 'Progenitor', 'MGE',
-                   'MGE', 'MGE', 'MGE', 'MGE', 'CGE', 'Undef')
+                   'CGE', 'MGE', 'MGE', 'MGE', 'MGE', 'MGE')
     
     } else if (SCORE == 60) {
     
@@ -247,8 +243,73 @@ for (SCORE in c('50', '60', '75')) {
   
 }
 
-save.image(file = '~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace.RData')
-load('~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace.RData')
+# Need to save using dropCells here. See https://github.com/GreenleafLab/ArchR/issues/483
+# devtools::install_github("immunogenomics/presto") issue was cause by not having presto
+saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)  
+archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))  
+
+# Create bed files
+for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
+  
+  if (CELL_TYPE == 'union') {
+    
+    PEAKS <- getPeakSet(archR_50)
+    
+  } else {
+    
+    # Load reproducible peak set for each cell-type
+    PEAKS <- readRDS(paste0(ARCHR_DIR, 'GE_pred_id_50/PeakCalls/', 
+                            CELL_TYPE, '-reproduciblePeaks.gr.rds'))
+    
+  }
+  
+  # Convert to bed file
+  PEAKS_DF <- data.frame(seqnames=seqnames(PEAKS),
+                         starts=start(PEAKS)-1,
+                         ends=end(PEAKS),
+                         names=c(rep(".", length(PEAKS))),
+                         scores=c(rep(".", length(PEAKS))),
+                         strands=strand(PEAKS))
+  
+  # Write df to bed file - https://www.biostars.org/p/89341/ 
+  write.table(PEAKS_DF, 
+              file=paste0(PEAKS_DIR, CELL_TYPE, '.hg38.ext250bp.bed'),
+              quote=F, 
+              sep="\t", 
+              row.names=F, 
+              col.names=F)
+  
+  # Assign Granges object 
+  assign(paste0(CELL_TYPE, '_peaks'), PEAKS)
+  
+}
+
+## Motif enrichment
+archR_50 <- addMotifAnnotations(ArchRProj = archR_50, motifSet = "cisbp", name = "Motif")
+markersPeaks <- getMarkerFeatures(
+  ArchRProj = archR_50, 
+  useMatrix = "PeakMatrix", 
+  groupBy = 'predicted.id',
+  bias = c("TSSEnrichment", "log10(nFrags)"),
+  testMethod = "wilcoxon", )
+
+enrichMotifs <- peakAnnoEnrichment(
+  seMarker = markersPeaks,
+  ArchRProj = archR_50,
+  peakAnnotation = "Motif",
+  cutOff = "FDR <= 0.1 & Log2FC >= 0.5"
+)
+
+heatmapEM <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE)
+ComplexHeatmap::draw(heatmapEM, 
+                     heatmap_legend_side = "bot", 
+                     annotation_legend_side = "bot")
+
+
+# Need to resolve issue with Motif analysis
+
+save.image(file = '~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')
+load('~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')
 
 ##  Create markdown html  -------------------------------------------------------------
 render(paste0(SCRIPT_DIR, 'snATACseq_local_testing.Rmd'),
