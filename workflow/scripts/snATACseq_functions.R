@@ -1169,3 +1169,48 @@ signac_snRNAseq_integration <- function(
   
 }
 
+
+run_peak_coaccesibility <- function(
+    
+  ARCHR_OBJ = NULL,
+  OUT_DIR = NULL) {
+  
+  #' Run ArchR peak co-accesibility
+  #' 
+  #' @description Run ArchR peak co-accesibility
+  #' 
+  #' @param SEURAT_OBJ An ArchR object
+  #' @param OUT_DIR A directory to save the output files to
+  #' 
+  #' @return ARCHR_OBJ
+  
+  
+  cat(paste0("Starting coaccessibility analysis for ", REGION, " ... \n"))
+  cat("Adding coaccessibile links ... \n")
+  ARCHR_OBJ <- addCoAccessibility(
+    ArchRProj = ARCHR_OBJ,
+    reducedDims = 'IterativeLSI'
+  )
+  
+  cat("Retrieving coaccesibility df ... \n")
+  cA <- getCoAccessibility(
+    ArchRProj = ARCHR_OBJ,
+    corCutOff = 0.5,
+    resolution = 1,
+    returnLoops = FALSE
+  )
+  
+  cA_metadata <- metadata(cA)[[1]]
+  cA_metadata
+  
+  ## Save RDS objects
+  cat(paste0('Writing coaccesibility df and metadata'))
+  saveRDS(cA, paste0(OUT_DIR, REGION, '_cA_peaks_df.rds'))
+  saveRDS(cA_metadata, paste0(OUT_DIR, REGION, '_cA_peaks_metadata.rds'))
+  
+  return(ARCHR_OBJ)
+    
+
+  
+}
+
