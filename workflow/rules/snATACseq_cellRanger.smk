@@ -32,5 +32,20 @@ rule CR_cnt_ATAC:
 
             """
 
+rule mv_frag_files:
+    input: "../results/01CELLRANGER/{SAMPLE}.stamp"
+    output: "../results/04FRAGMENT_FILES/{SAMPLE}.stamp"
+    log:    "../results/00LOGS/04FRAGMENT_FILES/{SAMPLE}.log"
+    params: indir = "../results/01CELLRANGER/{SAMPLE}/outs/",
+            outdir = "../results/04FRAGMENT_FILES/"
+    shell:
+            """ 
+
+            cp {params.indir}fragments.tsv.gz {params.outdir}{wildcards.SAMPLE}.fragments.tsv.gz 
+            cp {params.indir}fragments.tsv.gz.tbi {params.outdir}{wildcards.SAMPLE}.fragments.tsv.gz.tbi
+            
+            touch {output}
+            """ 
+
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------

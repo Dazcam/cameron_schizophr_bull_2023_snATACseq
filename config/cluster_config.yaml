@@ -32,13 +32,13 @@ sumstats_for_ldsc_hg19:
     duration: 3-00:00:00
 
 # -----------  LDSR  ---------------
-make_annot:
+ldsr_make_annot:
     num_cores: 1
     maxvmem: 10G
-ldsr:
+ldsr_ld_scores:
     num_cores: 1
     maxvmem: 10G
-partitioned_heritability:
+ldsr_stratified_baseline_v12:
     num_cores: 1
     maxvmem: 20G
 partitioned_heritability_conditional:
