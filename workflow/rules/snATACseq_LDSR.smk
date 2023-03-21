@@ -115,7 +115,7 @@ rule ldsr_stratified_summary:
     message: "Creating summary file for {wildcards.GWAS} GWAS"
     params:  dir = "../results/06LDSR/part_herit/baseline_v1.2/",
              cell_types = "../resources/sheets/GE_celltypes.tsv"
-    log:     "../results/logs/LDSR/snRNAseq.{GWAS}_baseline.v1.2_partHerit.summary.log"
+    log:     "../results/00LOGS/06LDSR/snRNAseq.{GWAS}_baseline.v1.2_partHerit.summary.log"
     shell:
              """
              
