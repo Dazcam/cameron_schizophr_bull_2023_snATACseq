@@ -800,48 +800,6 @@ pairwise_venn <- function(venn_counts, name1, name2) {
   
   
 }
-
-threeway_venn <- function(venn_counts, name1, name2, name3) {
-  
-  graphics.off()
-  
-  VENN_COUNTS <- as_tibble(venn_counts$vennCounts[])
-  
-  left <- sum(VENN_COUNTS[5:7, 5], VENN_COUNTS[8, 4])
-  right <- sum(VENN_COUNTS[c(3, 4, 7), 6], VENN_COUNTS[8, 4])
-  middle <- sum(VENN_COUNTS[c(2, 4, 6), 7], VENN_COUNTS[8, 4])
-  intersect_12 <- sum(VENN_COUNTS[7, 4], VENN_COUNTS[8, 4])
-  intersect_23 <- sum(VENN_COUNTS[4, 4], VENN_COUNTS[8, 4])
-  intersect_13 <- sum(VENN_COUNTS[6, 4], VENN_COUNTS[8, 4])
-  intersect_all3 <- as.double(VENN_COUNTS[8, 4])
-  
-  VENN <- draw.triple.venn(area1 = left, 
-                           area2 = right, 
-                           area3 = middle,
-                           n12 = intersect_12,
-                           n23 = intersect_23, 
-                           n13 = intersect_13, 
-                           n123 = intersect_all3,
-                           category = c(name1, name2, name3),
-                           fill = c("#0073C2FF", "#EFC000FF", '#21908DFF'),
-                           fontfamily = "sans",
-                           
-                           # Numbers
-                           cex = 2,
-                           
-                           # Set names
-                           cat.cex = 2,
-                           cat.fontface = "bold",
-                           cat.default.pos = "outer",
-                           cat.pos = c(-27, 27, 135),
-                           cat.dist = c(0.055, 0.055, 0.085),
-                           cat.fontfamily = "sans")
-  
-  return(VENN)
-  
-  
-}
-
 # To do: function for  LSI param testing
 
 # PARAMETER <- 'Max_Clusters'
@@ -1211,6 +1169,84 @@ run_peak_coaccesibility <- function(
   return(ARCHR_OBJ)
     
 
+  
+}
+
+run_motif_analysis <- function(
+    
+  PEAKS_GR = NULL, 
+  GENOME = NULL, 
+  TOP_N = NULL) {
+  
+  #' Run motif analysis on a granges object 
+  #' 
+  #' @description Run motif analysis on a granges object 
+  #' 
+  #' @param PEAKS_GR A Granges object containing peaks
+  #' @param GENOME A Bioconductor BSgenome object 
+  #' @param TOP_N The number of motifs most significant motifs to plot  
+  #' 
+  #' @return A motif plot for the top N motifs
+  
+  
+  # Motif enrichment - Human species number is 9606
+  cat(paste0("\n\nLoading packages ... \n"))
+  library(monaLisa)
+  library(JASPAR2020)
+  library(TFBSTools)
+  library(SummarizedExperiment)
+  library(BSgenome.Hsapiens.UCSC.hg19) # Need to add hg38 
+  
+  cat(paste0("\n\nObtaining motifs ... \n"))
+  pwms <- getMatrixSet(JASPAR2020, opts = list(matrixtype = "PWM", species = 9606))
+  
+  # Get sequence for peakset
+  cat(paste0("\n\nObtaining sequence info for peaks ... \n"))
+  SEQS <- Biostrings::getSeq(GENOME, PEAKS_GR)
+  
+  cat(paste0("\n\nCalculating motif enrichments ... \n"))
+  MOTIF_OBJ <- calcBinnedMotifEnrR(seqs = SEQS,
+                                   pwmL = pwms,
+                                   background = "genome",
+                                   genome = GENOME,
+                                   genome.regions = NULL, # sample from full genome
+                                   genome.oversample = 2, 
+                                   BPPARAM = BiocParallel::SerialParam(RNGseed = 42),
+                                   verbose = TRUE)
+  
+  cat(paste0("\n\nPulling out top", TOP_N, " most signifciant motifs ... \n"))
+  # Get lowest negLog10Padj for top30
+  TOP_P_MIN <- as_tibble(assay(MOTIF_OBJ, "negLog10Padj")[, 1]) %>%
+    arrange(desc(value)) %>%
+    top_n(TOP_N) %>%
+    min()
+  
+  # Pull out most significant
+  MOTIF_SIG <- assay(MOTIF_OBJ, "negLog10Padj")[, 1] >= TOP_P_MIN
+  MOTIF_SIG[is.na(MOTIF_SIG)] <- FALSE
+  
+  # Prepare df for plotting
+  pval <- as_tibble(assay(MOTIF_OBJ, "negLog10Padj")) %>% rownames_to_column() %>% dplyr::rename(negLog10Padj = `1`)
+  enrich <- as_tibble(assay(MOTIF_OBJ, "log2enr")) %>% rownames_to_column() %>% dplyr::rename(enrich_log2 = `1`)
+  motifs <- as_tibble(rowData(MOTIF_OBJ)$motif.name) %>% rownames_to_column() %>% dplyr::rename(motifs = value)
+  MOTIF_DF <- pval %>% 
+    left_join(enrich) %>%
+    left_join(motifs) %>% 
+    select(!rowname) %>%
+    arrange(desc(negLog10Padj))
+  
+  cat(paste0("\n\nPlotting ... \n"))
+  MOTIF_PLOT <- plotMotifHeatmaps(x = MOTIF_OBJ[MOTIF_SIG], 
+                                  which.plots = c("log2enr", "negLog10Padj"), 
+                                  width = 1.8, maxEnr = 2, maxSig = 300,
+                                  show_seqlogo = TRUE) 
+  
+  # Need to use patchwork here to join list of plots created by motif plot
+  FINAL_PLOT <- MOTIF_PLOT$labels + MOTIF_PLOT$log2enr + MOTIF_PLOT$negLog10Padj
+  
+  return(FINAL_PLOT)
+  
+  cat(paste0("\n\nDone. \n"))
   
 }
 
