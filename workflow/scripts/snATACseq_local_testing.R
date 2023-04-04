@@ -41,15 +41,9 @@ RUN_HARMONY <- TRUE
 COVARIATES <- c('Sample')
 RUN_INTEGRATION <- TRUE
 
-MARKER_GENES <-  c('SLC17A7', # ExN
-                   'TLE3', 'LHX2', # UL ExN
-                   'CRYM', 'FEZF2', # DL ExN
-                   'GAD1', 'GAD2', 'SLC32A1', # InN
-                   'GLI3', 'TNC', # RG
-                   'C3', 'SPI1', # MG
-                   'EOMES', # IP
-                   'OLIG1', 'OLIG2', # OPC
-                   'ITM2A') # Endothelial
+MARKER_GENES <-  c('GAD1', 'GAD2', 'SLC32A1', 'GLI3', 'SLC17A7',
+                   'TNC', 'PROX1', 'SCGN', 'LHX6', 'NXPH1',
+                   'MEIS2','ZFHX3', 'SPI1', 'LHX8', 'ISL1', 'GBX2') 
 
 SAMPLES <- c("14510_WGE_ATAC", "14611_WGE_ATAC", "14993_WGE_ATAC")
   
@@ -73,6 +67,7 @@ cell_cnts <- as_tibble(table(archR$Sample), .name_repair = make.names) %>%
 ##  Run Cluster analysis  -------------------------------------------------------------
 # run_cluster_analysis(ARCHR_ID = archR) - done on hawk
 create_archR_group_plot(archR, 'Clusters', 'UMAP')
+group_plot_Clusters_raw <- group_plot_Clusters 
 plot_UMAPs_by_marker_genes(archR, 'UMAP', MARKER_GENES)
 
 
@@ -246,7 +241,6 @@ for (SCORE in c('50')) {
 # Need to save using dropCells here. See https://github.com/GreenleafLab/ArchR/issues/483
 # devtools::install_github("immunogenomics/presto") issue was cause by not having presto
 saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)  
-archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))  
 
 # Create bed files
 for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
@@ -284,7 +278,8 @@ for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
   
 }
 
-## Motif enrichment
+## Motif enrichment   -----------------------------------------------------------------
+archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))  
 archR_50 <- addMotifAnnotations(ArchRProj = archR_50, motifSet = "cisbp", name = "Motif")
 markersPeaks <- getMarkerFeatures(
   ArchRProj = archR_50, 
@@ -306,7 +301,26 @@ ComplexHeatmap::draw(heatmapEM,
                      annotation_legend_side = "bot")
 
 
-# Need to resolve issue with Motif analysis
+## Peak coaccessibility  --------------------------------------------------------------
+archR_50 <- run_peak_coaccesibility(archR_50, PEAKS_DIR)
+
+track_plot <- plotBrowserTrack(
+  ArchRProj = archR_50, 
+  groupBy = "predicted.id", 
+  geneSymbol = 'DLX1', 
+  upstream = 50000,
+  downstream = 50000,
+  loops = getCoAccessibility(archR_50)
+)
+
+grid::grid.newpage()
+grid::grid.draw(track_plot$DLX1)
+
+
+plot_UMAPs_by_marker_genes(archR_50, 'UMAP', MARKER_GENES)
+
+# Save 
+saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)  
 
 save.image(file = '~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')
 load('~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')

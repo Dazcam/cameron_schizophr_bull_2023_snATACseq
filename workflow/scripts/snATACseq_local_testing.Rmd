@@ -42,7 +42,7 @@ knitr::kable(cell_cnts)
 
 
 ```{R, group_plot_pre, echo=FALSE, fig.height = 10, fig.width = 10}
-print(group_plot_Clusters)
+print(group_plot_Clusters_raw)
 ```
 
 ***
@@ -74,10 +74,10 @@ print(group_plot_60)
 
 ***
 
-##### **50**
+##### **70**
 
 
-```{R, group_plot_75, echo=FALSE, fig.height = 10, fig.width = 10}
+```{R, group_plot_77, echo=FALSE, fig.height = 10, fig.width = 10}
 print(group_plot_75)
 ```
 
@@ -169,6 +169,16 @@ knitr::kable(sample_cnt_75)
 
 ```{R, counts_75, echo=FALSE, fig.height = 10, fig.width = 10}
 knitr::kable(seurat_id_by_sample_75)
+```
+
+***
+
+#### **UMAP by gene** {.tabset}
+
+***
+
+```{R, umap_by_gene, echo=FALSE, fig.height = 10, fig.width = 10}
+all_genes_UMAP
 ```
 
 ***
@@ -279,3 +289,37 @@ peak_call_summary_plot_75
 
 ***
 
+
+#### **Motifs** {.tabset}
+
+***
+
+```{R, Motifs, echo=FALSE, messages=FALSE, warning=FALSE, fig.height = 10, fig.width = 10}
+heatmapEM <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE)
+ComplexHeatmap::draw(heatmapEM, 
+                     heatmap_legend_side = "bot", 
+                     annotation_legend_side = "bot")
+```
+
+***
+
+#### **Co-accessibility** {.tabset}
+
+***
+
+```{R, coacces, echo=FALSE, fig.height = 10, fig.width = 10}
+grid::grid.newpage()
+grid::grid.draw(track_plot$DLX1)
+```
+
+***
+
+#### **LDSR** {.tabset}
+
+***
+
+```{R, ldsr_plot, echo=FALSE, fig.height = 10, fig.width = 10}
+ldsr_plot
+```
+
+***
