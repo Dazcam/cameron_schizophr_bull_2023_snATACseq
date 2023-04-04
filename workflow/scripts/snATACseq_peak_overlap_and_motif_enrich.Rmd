@@ -1,0 +1,86 @@
+---
+title: "snATAC ArchR peak overlap and motif enrichment report `r REGION`"
+author: "Darren Cameron"
+date: "`r format(Sys.time(), '%d/%m/%y')`"
+output:
+  html_document:
+    theme: paper
+---
+
+```{r packages, echo=FALSE, include=FALSE}
+library(cowplot)
+library(knitr)
+```
+
+snATACseq analysis with ArchR.
+
+*** 
+
+### **Results** {.tabset}
+
+#### **Venns**
+
+***
+```{R, Venns, echo=FALSE, fig.height = 10, fig.width = 10}
+all_venn_plot
+```
+
+***
+
+#### **Motifs** {.tabset}
+
+##### **CGE**
+
+***
+
+```{R, cge, echo=FALSE, fig.height = 10, fig.width = 10}
+cge_uniq_motif_plot
+```
+
+***
+
+##### **LGE**
+
+***
+
+```{R, lge, echo=FALSE, fig.height = 10, fig.width = 10}
+lge_uniq_motif_plot
+```
+
+***
+
+##### **MGE**
+
+***
+
+```{R, mge, echo=FALSE, fig.height = 10, fig.width = 10}
+mge_uniq_motif_plot
+```
+
+***
+
+##### **MScoff CGE**
+
+***
+
+```{R, mcscoff_cge, echo=FALSE, fig.height = 10, fig.width = 10}
+cge_mscoff_uniq_motif_plot
+```
+
+##### **MScoff LGE**
+
+***
+
+```{R, mcscoff_lge, echo=FALSE, fig.height = 10, fig.width = 10}
+lge_mscoff_uniq_motif_plot
+```
+
+##### **MScoff MGE**
+
+***
+
+```{R, mcscoff_mge, echo=FALSE, fig.height = 10, fig.width = 10}
+mge_mscoff_uniq_motif_plot
+```
+
+***
