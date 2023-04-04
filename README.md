@@ -1,6 +1,6 @@
-# Fetal brain snATACseq analyses (version 3)
+# Fetal brain snATACseq analyses (version 3) - ongoing
 
-This project was carried out in the Division of Psychological Medicine and Clinical Neurosciences (DPMCN). The paper is [here](https://www.biologicalpsychiatryjournal.com/article/S0006-3223(22)01404-4/fulltext). The workflow follows the the snakemake [distribution and reproducibility](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html) recommendations. 
+This project was carried out in the Division of Psychological Medicine and Clinical Neurosciences (DPMCN). (https://www.biologicalpsychiatryjournal.com/article/S0006-3223(22)01404-4/fulltext). The workflow follows the the snakemake [distribution and reproducibility](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html) recommendations. 
 
 ***
 
@@ -11,12 +11,8 @@ A snakemake pipeline (and local) pipeline to process snATACseq data. Utilising t
 + [ArchR 1.0.2](https://www.archrproject.com) 
 + [Signac 1.9.0](https://stuartlab.org/signac/)
 + [ArchR2Signac](https://bioconductor.org/packages/release/bioc/html/scDblFinder.html)
-+ [Scater 1.18.5](https://bioconductor.org/packages/release/bioc/html/scater.html)
-+ [MAGMA Celltyping 1.0.0](https://github.com/neurogenomics/MAGMA_Celltyping)
 + [MAGMA 1.08](https://ctg.cncr.nl/software/magma)
 + [LD Score Regression 1.0.1](https://github.com/bulik/ldsc)
-+ [clustifyr 1.2.0](https://bioconductor.org/packages/release/bioc/html/clustifyr.html)
-+ [scRNAseq_Benchmark](https://github.com/tabdelaal/scRNAseq_Benchmark)
 + etc.
 
 ***
