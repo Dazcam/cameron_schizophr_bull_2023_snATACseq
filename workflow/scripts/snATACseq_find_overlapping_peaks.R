@@ -85,35 +85,7 @@ for (REGION in c('lge', 'cge', 'mge')) {
   
 }
 
-# Get Ziffra peaks
-peak_list <- read_excel(paste0(ZIFFRA_DIR, 'Ziffra_2021_supp_tables_2_13.xlsx'), 
-                        sheet = 'ST2 AllPrimaryPeaks') %>%
-  dplyr::select(seqnames, start, end, peak_name) 
-macs2_peak_list <- read_excel(paste0(ZIFFRA_DIR, 'Ziffra_2021_supp_tables_2_13.xlsx'), 
-                              sheet = 'ST3 MACSpeaks_byCelltype') 
-
-# Ziffra data was aligned to Hg38
-cat('\nPull out MGE peaks from Ziffra data ... \n')
-ziffra_mge_peaks <- macs2_peak_list %>% 
-  inner_join(peak_list) %>%
-  rename_with(~str_remove(., '_MACSpeaks')) %>%
-  dplyr::rename(chr = seqnames)  %>%
-  select(chr, start, end, peak_name, MGE) %>%
-  filter(MGE == 1) %>%
-  select(-MGE) %>%
-  toGRanges(format = "BED", header = FALSE) 
-
-mge_hg38_peaks <- read_tsv(paste0(PEAKS_DIR, 'mge.hg19.ext250bp.bed'), 
-         col_names = c('chr', 'start', 'end')) %>%
-  toGRanges(format = "BED", header = FALSE)
-
-
-# Make Venn
-mge_hg38_overlaps <- findOverlapsOfPeaks(mge_hg38_peaks, ziffra_mge_peaks, minoverlap = 100)
-mge_hg38_venn <- makeVennDiagram(mge_hg38_overlaps, minoverlap = 100)
-mge_hg38_venn2 <- pairwise_venn(mge_hg38_venn, 'MGE', 'MGE-Ziffra')
-
-all_venn_plot <- plot_grid(mge_venn2, lge_venn2, cge_venn2, mge_hg38_venn2)
+all_venn_plot <- plot_grid(mge_venn2, lge_venn2, cge_venn2)
 
 
 # Get unique peaks
