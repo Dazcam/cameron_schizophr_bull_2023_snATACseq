@@ -4,7 +4,7 @@ This project was carried out in the Division of Psychological Medicine and Clini
 
 ***
 
-A snakemake pipeline (and local) pipeline to process snATACseq data. Utilising the following packages:
+A snakemake (and local) pipeline to process snATACseq data. Utilising the following packages:
 
 + [Snakemake 6.6.1](https://snakemake.readthedocs.io/en/stable/)
 + [CellRanger atac 2.1.0](https://support.10xgenomics.com/single-cell-atac/software/pipelines/latest/algorithms/overview)
