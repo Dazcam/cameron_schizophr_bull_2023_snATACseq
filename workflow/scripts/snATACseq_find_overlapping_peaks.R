@@ -29,12 +29,17 @@ RESULTS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/'
 source('~/Desktop/fetal_brain_snATACseq_V3_010323/workflow/scripts/snATACseq_functions.R')
 
 # Load hg19 peaks
-for (REGION in c('LGE', 'MGE', 'CGE')) {
+for (REGION in c('LGE', 'MGE', 'CGE', 'progenitor')) {
   
-  PEAKS <- read_tsv(paste0(PEAKS_DIR, REGION, '.hg19.ext250bp.bed'), 
+  PEAKS_HG19 <- read_tsv(paste0(PEAKS_DIR, REGION, '.hg19.ext250bp.bed'), 
                     col_names = c('chr', 'start', 'end')) %>%
     toGRanges(format = "BED", header = FALSE) 
-  assign(paste0(tolower(REGION), '_hg19_peaks'), PEAKS)
+  PEAKS_HG38 <- read_tsv(paste0(PEAKS_DIR, REGION, '.hg38.ext250bp.bed'), 
+                         col_names = c('chr', 'start', 'end')) %>%
+    toGRanges(format = "BED", header = FALSE) 
+  
+  assign(paste0(tolower(REGION), '_hg19_peaks'), PEAKS_HG19)
+  assign(paste0(tolower(REGION), '_hg38_peaks'), PEAKS_HG38)
   
   
 }
@@ -62,7 +67,7 @@ for (REGION in c('lge', 'cge', 'mge')) {
 }
 
 
-# Find peak overlaps
+# Find peak overlaps - 2-way
 for (REGION in c('lge', 'cge', 'mge')) {
   
   PEAKS <- get(paste0(REGION, '_hg19_peaks'))
@@ -76,30 +81,33 @@ for (REGION in c('lge', 'cge', 'mge')) {
   UNIQUE_PEAKS <- peaks <- OVERLAPS$peaklist$PEAKS
   MSCOFF_UNIQ_PEAKS <- OVERLAPS$peaklist$MSCOFF_PEAKS
   
-  assign(paste0(REGION, '_overlaps'), OVERLAPS)
-  assign(paste0(REGION, '_venn1'), VENN)
-  assign(paste0(REGION, '_venn2'), VENN2)
-  assign(paste0(REGION, '_uniq_peaks'), UNIQUE_PEAKS)
-  assign(paste0(REGION, '_mscoff_uniq_peaks'), MSCOFF_UNIQ_PEAKS)
+  assign(paste0(REGION, '_2way_overlaps'), OVERLAPS)
+  assign(paste0(REGION, '_2way_venn1'), VENN)
+  assign(paste0(REGION, '_2way_venn2'), VENN2)
+  assign(paste0(REGION, '_2way_uniq_peaks'), UNIQUE_PEAKS)
+  assign(paste0(REGION, '_2way_mscoff_uniq_peaks'), MSCOFF_UNIQ_PEAKS)
   
   
 }
 
-all_venn_plot <- plot_grid(mge_venn2, lge_venn2, cge_venn2)
 
+# Find GE InNs peak overlaps hg38 - 3-way
+cat('\nFinding overlaps for GE InNs ... \n\n')
+overlaps_ge_ins <- findOverlapsOfPeaks(cge_hg38_peaks, lge_hg38_peaks, mge_hg38_peaks, minoverlap = 100)
+venn_ge_ins <- makeVennDiagram(overlaps_ge_ins, minoverlap = 100)
+venn2_ge_ins <- threeway_venn(venn_ge_ins, 'CGE-InN','LGE-InN','MGE-InN') 
 
-# Get unique peaks
-mge_ziffra_hg38_peaks <- mge_hg38_overlaps$peaklist$ziffra_mge_peaks
-mge_hg38_peaks <- mge_hg38_overlaps$peaklist$mge_hg38_peaks
+all_venn_plot <- plot_grid(venn2_ge_ins, mge_2way_venn2, lge_2way_venn2, cge_2way_venn2)
+
 
 
 # Run motif enrichment
-mge_uniq_motif_plot <- run_motif_analysis(mge_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-lge_uniq_motif_plot <- run_motif_analysis(lge_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-cge_uniq_motif_plot <- run_motif_analysis(cge_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-cge_mscoff_uniq_motif_plot <- run_motif_analysis(cge_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-lge_mscoff_uniq_motif_plot <- run_motif_analysis(lge_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-mge_mscoff_uniq_motif_plot <- run_motif_analysis(mge_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
+mge_uniq_motif_plot <- run_motif_analysis(mge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'mge')
+lge_uniq_motif_plot <- run_motif_analysis(lge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'lge')
+cge_uniq_motif_plot <- run_motif_analysis(cge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'cge')
+#cge_mscoff_uniq_motif_plot <- run_motif_analysis(cge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
+#lge_mscoff_uniq_motif_plot <- run_motif_analysis(lge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
+#mge_mscoff_uniq_motif_plot <- run_motif_analysis(mge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
 
 
 ##  Create markdown html  -------------------------------------------------------------

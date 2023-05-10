@@ -7,7 +7,7 @@
 ## Info  ------------------------------------------------------------------------------
 
 # 1. Download PGC3 SCZ GWAS fine mapped SNPs
-#    23 SNPs with 1:28690628_T_C encoding removed for now
+#    16 SNPs with 1:28690628_T_C encoding removed for now
 # 2. Map SNPs to hg38 using BioMart
 # 3. Check for overlap of PGC3 SCZ finemapped SNPs in snATACseq peaks (250 bp ext)
 # 4. Create binary df for whether SNP is in/not in peak for all cell types
@@ -24,7 +24,7 @@ library(biomaRt)
 
 ##  Define global variables  -----------------------------------------------------------
 cat('\nDefining variables ... \n')
-IN_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/resources/sheets/"
+IN_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/resources/public_datasets/trubestskoy_2022/2020-08-14908C-s11/"
 PEAK_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/results/05PEAKS/"
 SNP_DIR <- paste0(PEAK_DIR, 'finemapped_SNPs/')
 PEAK_EXTENSION <- c('ext250bp')
@@ -34,9 +34,9 @@ CELL_TYPES <- c("CGE", "LGE", "MGE", "Progenitor")
 dir.create(SNP_DIR)
 
 ##  Read in PGC3 index SNPs one is not an rsID just removed it  ------------------------
-snps <- read_excel(paste0(IN_DIR, 'PGC3_SCZ_Supplementary_Table_11_FINEMAP_UPDATED.xlsx'), 
+snps <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'), 
                    sheet = 'ST11a 95% Credible Sets') %>%
-  dplyr::select(rsid) %>% # 23,159 SNPs
+  dplyr::select(rsid) %>% # 20750 SNPs
   filter(!grepl(':|_', rsid)) %>% # 23 SNPs with 1:28690628_T_C encoding removed for now
   base::as.data.frame(snps) %>%
   distinct(rsid, .keep_all = TRUE) %>%
@@ -45,12 +45,12 @@ snps <- read_excel(paste0(IN_DIR, 'PGC3_SCZ_Supplementary_Table_11_FINEMAP_UPDAT
 
 cat(paste0(length(snps), ' SNPs retained from PGC3 table.\n'))
 
-# snps_norsID <- read_excel(paste0(IN_DIR, 'PGC3_SCZ_Supplementary_Table_11_FINEMAP_UPDATED.xlsx'), 
-#                           sheet = 'ST11a 95% Credible Sets') %>%
-#   dplyr::select(rsid) %>% 
-#   filter(grepl(':|_', rsid)) 
-# 
-# cat(paste0(length(snps_norsID %>% pull), ' SNPs with no rsIDs.\n'))
+snps_norsID <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'),
+                          sheet = 'ST11a 95% Credible Sets') %>%
+   dplyr::select(rsid) %>%
+   filter(grepl(':|_', rsid))
+
+ cat(paste0(length(snps_norsID %>% pull), ' SNPs with no rsIDs.\n'))
 
 # # Get rsIDs for snps_norsID
 # ensembl <- useEnsembl("ENSEMBL_MART_SNP", dataset = "hsapiens_snp")
@@ -95,9 +95,8 @@ cat(paste0(nrow(snps_no_patches), ' SNPs retained. \n'))
 
 # Add posterior probability and index SNPs columns 
 SNPs_join <- snps_no_patches %>% 
-  left_join(read_excel(paste0(IN_DIR, 
-                              'PGC3_SCZ_Supplementary_Table_11_FINEMAP_UPDATED.xlsx'), 
-                               sheet = 'ST11a 95% Credible Sets')) %>%
+  left_join(read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'), 
+                       sheet = 'ST11a 95% Credible Sets')) %>%
   dplyr::select(rsid, chr_name, hg38_base_position, index_snp, 
                 finemap_posterior_probability)
 
@@ -106,7 +105,7 @@ write_tsv(as.data.frame(SNPs_join), paste0(SNP_DIR, 'pgc3_scz_finemapped_SNPs_hg
 
 
 ## Check for overlap of SNPs in snATACseq peaks of individual cell types  -------------
-# Could speed be improved using Granges? Chipseeker findOverlaps?
+# Could speed be improved using Granges? ChipSeeker? findOverlaps? ccpR?
 for (CELL_TYPE in CELL_TYPES) {
   
     for (EXT in PEAK_EXTENSION) {
@@ -143,7 +142,7 @@ for (CELL_TYPE in CELL_TYPES) {
       
       # Add posterior probability and index SNP info to output
       cell_overlaps <- cell_overlaps %>% 
-        left_join(snps <- read_excel(paste0(IN_DIR, 'PGC3_SCZ_Supplementary_Table_11_FINEMAP_UPDATED.xlsx'), 
+        left_join(snps <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'), 
                                      sheet = 'ST11a 95% Credible Sets')) %>%
         dplyr::select(rsid, chr, start, end, hg38_base_position, index_snp, finemap_posterior_probability)
       
@@ -261,10 +260,10 @@ for (EXT in c(PEAK_EXTENSION)) {
   SNPS_FINAL_DF_PPs <- SNPS_FINAL_DF_NO_PEAKS %>%
     pull(finemap_posterior_probability)
   
-  PGC3_SNPS_PPs <- read_excel(paste0(IN_DIR, 'PGC3_SCZ_Supplementary_Table_11_FINEMAP_UPDATED.xlsx'), 
+  PGC3_SNPS_PPs <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'), 
                               sheet = 'ST11a 95% Credible Sets') %>%
     dplyr::select(rsid, finemap_posterior_probability) %>%
-    filter(!grepl(':|_', rsid)) %>% # 23 SNPs with 1:28690628_T_C encoding removed for now
+    filter(!grepl(':|_', rsid)) %>% # 16 SNPs with 1:28690628_T_C encoding removed for now
     base::as.data.frame(snps) %>%
     distinct(rsid, .keep_all = TRUE) %>%
     arrange(rsid) %>%
