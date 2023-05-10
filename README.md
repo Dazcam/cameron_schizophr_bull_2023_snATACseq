@@ -19,7 +19,7 @@ A snakemake (and local) pipeline to process snATACseq data. Utilising the follow
 
 **Data**
 
-Focuusing on GE snATACseq data (from V1) using ArchR. 
+Focussing on GE snATACseq data (from V1) using ArchR. 
 
 ***
 
@@ -31,7 +31,20 @@ Papers for public datasets used for confirmation of our cell assignments
 
 Main scripts of interest
 
-ArchR
+Alignment (Cell Ranger ATAC) and basic snATACseq processing (ArchR)
 
 1. [snATACseq_cellRanger.smk](workflow/rules/snATACseq_cellRanger.smk) - Run Cell Ranger `atac-count` on fastQ files 
+2. [snATACseq_archR_processing.smk](workflow/rules/snATACseq_archR_processing.smk) - Run ArchR QC and batch correction
+    + [snATACseq_QC.R](workflow/scripts/snATACseq_QC.R) - Run ArchR QC 
+3. [snATACseq_local_testing.R](workflow/scripts/snATACseq_local_testing.R) - Run main ArchR snATACseq processes locally
+
+Overlap of fine-mapped SCZ-assoc. SNPs in co-accessible OCRs 
+
+4. [snATACseq_map_PGC3_SCZ_finemapped_SNPs_to_peaks.R](workflow/scripts/snATACseq_map_PGC3_SCZ_finemapped_SNPs_to_peaks.R) - Map SCZ SNPs to cell specific OCRs
+5. [snATACseq_annotate_archR_coaccesible_peaks.R](workflow/scripts/snATACseq_annotate_archR_coaccesible_peaks.R) - Annotate cA peaks and pull out peak pairs containing SCZ SNP
+6. [snATACseq_find_overlapping_peaks.R](workflow/scripts/snATACseq_find_overlapping_peaks.R) - Compare OCRs to publicly available GE OCRs and run motif analysis
+
+SLDSR
+
+7. [snATACseq_LDSR.smk](workflow/rules/snATACseq_LDSR.smk) - Run sLDSR integrating cell specific OCRs with SCZ and Height GWAS data
 
