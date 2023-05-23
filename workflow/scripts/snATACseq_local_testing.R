@@ -5,22 +5,11 @@
 #--------------------------------------------------------------------------------------
 
 ## Load packages  ---------------------------------------------------------------------
-library(ArchR)
-library(Seurat)
-library(Signac)
-library(pheatmap)
-library(tidyverse)
-library(rmarkdown)
-library(ComplexHeatmap)
-library(cowplot)
-library(rmarkdown)
-library(plyr)
-library(gtools)
-library(BSgenome.Hsapiens.UCSC.hg38) # For peak calling
-library(readxl)
-library(ArchRtoSignac)
-#library(tictoc) # This causes an error with addReproduciblePeaks function
-library(SeuratWrappers) # For RunFastMNN used during integration
+if (!require("Require")) install.packages("Require")
+Require::Require(c("tidyverse", "readxl", "ArchR", "Signac", "Seurat", 
+                   "SeuratWrappers", "cowplot", "scCustomize", "rmarkdown", "SeuratDisk",
+                   "ArchRtoSignac", "pheatmap", "ComplexHeatmap", "plyr", "gtools",
+                   "BSgenome.Hsapiens.UCSC.hg38")) 
 
 
 ## Load env variables  ----------------------------------------------------------------
@@ -56,6 +45,7 @@ SAMPLE_IDs <- SAMPLES %>%
 
 ## Load functions  --------------------------------------------------------------------
 source(paste0(SCRIPT_DIR, 'snATACseq_functions.R'))
+source(paste0(SCRIPT_DIR, 'snATACseq_plots_LDSR_barplots.R'))
 
 ## Load and prep archR project  -------------------------------------------------------
 archR <- loadArchRProject(paste0(ARCHR_DIR, 'GE'))  
@@ -63,6 +53,8 @@ archR <- loadArchRProject(paste0(ARCHR_DIR, 'GE'))
 ## Get counts  -----------------------------------------------------------------------
 cell_cnts <- as_tibble(table(archR$Sample), .name_repair = make.names) %>%
   dplyr::rename("Sample" = "X","cell_cnts_postQC" = "n")
+
+
 
 ##  Run Cluster analysis  -------------------------------------------------------------
 # run_cluster_analysis(ARCHR_ID = archR) - done on hawk
@@ -239,7 +231,7 @@ for (SCORE in c('50')) {
 }
 
 # Need to save using dropCells here. See https://github.com/GreenleafLab/ArchR/issues/483
-# devtools::install_github("immunogenomics/presto") issue was cause by not having presto
+# devtools::install_github("immunogenomics/presto") issue was caused by not having presto
 saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)  
 
 # Create bed files
@@ -334,4 +326,3 @@ render(paste0(SCRIPT_DIR, 'snATACseq_local_testing.Rmd'),
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
 
-       

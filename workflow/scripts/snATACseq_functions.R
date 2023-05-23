@@ -786,11 +786,11 @@ pairwise_venn <- function(venn_counts, name1, name2) {
                              fontfamily = "sans",
                              
                              # Numbers
-                             cex = 2,
+                             cex = 1.5,
                              
                              # Set names
                              cat.cex = 1.5,
-                             cat.fontface = "bold",
+                             #cat.fontface = "bold",
                              cat.default.pos = "outer",
                              cat.pos = c(-10, 10),
                              cat.dist = c(0.055, 0.055),
@@ -800,6 +800,49 @@ pairwise_venn <- function(venn_counts, name1, name2) {
   
   
 }
+
+threeway_venn <- function(venn_counts, name1, name2, name3) {
+  
+  graphics.off()
+  
+  VENN_COUNTS <- as_tibble(venn_counts$vennCounts[])
+  
+  left <- sum(VENN_COUNTS[5:7, 5], VENN_COUNTS[8, 4])
+  right <- sum(VENN_COUNTS[c(3, 4, 7), 6], VENN_COUNTS[8, 4])
+  middle <- sum(VENN_COUNTS[c(2, 4, 6), 7], VENN_COUNTS[8, 4])
+  intersect_12 <- sum(VENN_COUNTS[7, 4], VENN_COUNTS[8, 4])
+  intersect_23 <- sum(VENN_COUNTS[4, 4], VENN_COUNTS[8, 4])
+  intersect_13 <- sum(VENN_COUNTS[6, 4], VENN_COUNTS[8, 4])
+  intersect_all3 <- as.double(VENN_COUNTS[8, 4])
+  
+  VENN <- draw.triple.venn(area1 = left, 
+                           area2 = right, 
+                           area3 = middle,
+                           n12 = intersect_12,
+                           n23 = intersect_23, 
+                           n13 = intersect_13, 
+                           n123 = intersect_all3,
+                           category = c(name1, name2, name3),
+                           fill = c("#0073C2FF", "#EFC000FF", '#21908DFF'),
+                           fontfamily = "sans",
+                           
+                           # Numbers
+                           cex = 1.5,
+                           
+                           # Set names
+                           cat.cex = 1.5,
+                           #cat.fontface = "bold",
+                           cat.default.pos = "outer",
+                           cat.pos = c(-15, 15, 0),
+                           cat.dist = c(0.08, 0.08, -0.48),
+                           cat.fontfamily = "sans")
+                           
+  
+  return(VENN)
+  
+  
+}
+
 # To do: function for  LSI param testing
 
 # PARAMETER <- 'Max_Clusters'
@@ -1176,7 +1219,8 @@ run_motif_analysis <- function(
     
   PEAKS_GR = NULL, 
   GENOME = NULL, 
-  TOP_N = NULL) {
+  TOP_N = NULL,
+  REGION = NULL) {
   
   #' Run motif analysis on a granges object 
   #' 
@@ -1185,6 +1229,7 @@ run_motif_analysis <- function(
   #' @param PEAKS_GR A Granges object containing peaks
   #' @param GENOME A Bioconductor BSgenome object 
   #' @param TOP_N The number of motifs most significant motifs to plot  
+  #' @param REGION The region the cells of interest come from
   #' 
   #' @return A motif plot for the top N motifs
   
@@ -1196,6 +1241,7 @@ run_motif_analysis <- function(
   library(TFBSTools)
   library(SummarizedExperiment)
   library(BSgenome.Hsapiens.UCSC.hg19) # Need to add hg38 
+  library(patchwork)
   
   cat(paste0("\n\nObtaining motifs ... \n"))
   pwms <- getMatrixSet(JASPAR2020, opts = list(matrixtype = "PWM", species = 9606))
@@ -1245,6 +1291,7 @@ run_motif_analysis <- function(
   FINAL_PLOT <- MOTIF_PLOT$labels + MOTIF_PLOT$log2enr + MOTIF_PLOT$negLog10Padj
   
   return(FINAL_PLOT)
+  assign(paste0(REGION, '_motifs_df'), MOTIF_DF, .GlobalEnv)
   
   cat(paste0("\n\nDone. \n"))
   

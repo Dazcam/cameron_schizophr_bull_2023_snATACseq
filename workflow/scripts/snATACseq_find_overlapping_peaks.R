@@ -96,9 +96,9 @@ cat('\nFinding overlaps for GE InNs ... \n\n')
 overlaps_ge_ins <- findOverlapsOfPeaks(cge_hg38_peaks, lge_hg38_peaks, mge_hg38_peaks, minoverlap = 100)
 venn_ge_ins <- makeVennDiagram(overlaps_ge_ins, minoverlap = 100)
 venn2_ge_ins <- threeway_venn(venn_ge_ins, 'CGE-InN','LGE-InN','MGE-InN') 
-
-all_venn_plot <- plot_grid(venn2_ge_ins, mge_2way_venn2, lge_2way_venn2, cge_2way_venn2)
-
+all_venn_plot <- plot_grid(venn2_ge_ins, mge_2way_venn2, lge_2way_venn2, cge_2way_venn2, 
+                           scale = c(1, 0.8, 0.8, 0.8))
+all_venn_plot
 
 
 # Run motif enrichment
