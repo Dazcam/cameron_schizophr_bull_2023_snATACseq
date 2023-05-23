@@ -280,6 +280,36 @@ for (EXT in c(PEAK_EXTENSION)) {
 
 cat('Done.')
 
+#Bring the Wilcoxon test outside the loop:
 
+SNPS_FINAL_DF_NO_PEAKS <- read_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
+                                          PEAK_EXTENSION, '_SNPs_only.tsv'))
+SNPS_FINAL_DF_WITH_PEAKS <- read_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
+                                            PEAK_EXTENSION, '_with_peaks.tsv'))
+
+SNPS_FINAL_DF_rsIDs <- SNPS_FINAL_DF_NO_PEAKS %>%
+  pull(rsid)
+
+SNPS_FINAL_DF_PPs <- SNPS_FINAL_DF_NO_PEAKS %>%
+  pull(finemap_posterior_probability)
+
+PGC3_SNPS_PPs <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'), 
+                            sheet = 'ST11a 95% Credible Sets') %>%
+  dplyr::select(rsid, finemap_posterior_probability) %>%
+  filter(!grepl(':|_', rsid)) %>% # 16 SNPs with 1:28690628_T_C encoding removed for now
+  base::as.data.frame(snps) %>%
+  distinct(rsid, .keep_all = TRUE) %>%
+  arrange(rsid) %>%
+  filter(!rsid %in% SNPS_FINAL_DF_rsIDs) %>%
+  pull(finemap_posterior_probability)
+
+cat('\n\nWilcox test for SNPs ext:', PEAK_EXTENSION, '\n\n')
+
+print(wilcox.test(SNPS_FINAL_DF_PPs, PGC3_SNPS_PPs, alternative = 't'))
+
+boxplot(SNPS_FINAL_DF_PPs, PGC3_SNPS_PPs)
+
+median(SNPS_FINAL_DF_PPs)
+median(PGC3_SNPS_PPs)
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
