@@ -3,12 +3,13 @@ configfile: '../config/config.yaml'
 include: "rules/snATACseq_cellRanger.smk"
 include: "rules/snATACseq_archR_processing.smk"
 include: "rules/snATACseq_LDSR.smk"
+include: "rules/snATACseq_LDSR_conditional.smk"
 
-localrules: get_lift_over_files, ldsr_stratified_summary
+localrules: ldsr_get_lift_over_files, ldsr_stratified_summary
 
 rule all:
     input:
         expand("../results/04FRAGMENT_FILES/{SAMPLE}.stamp", SAMPLE = config['SAMPLES_ATAC']),
         expand("../results/03MARKDOWN/snATACseq_QC_{REGION}.html", REGION = config['ATAC_REGIONS']),
-        expand("../results/06LDSR/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['LDSR_GWAS'])        
-        #expand("../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}_baseline.v1.2.results", CELL_TYPE = config['CELL_TYPES'], GENE_WINDOW = config['GENE_WINDOW'], GWAS = config['LDSR_GWAS'])
+        expand("../results/06LDSR/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['LDSR_GWAS']),        
+        expand("../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['LDSR_GWAS']) 

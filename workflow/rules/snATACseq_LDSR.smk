@@ -39,9 +39,23 @@ rule ldsr_lift_over:
 
              """
 
+rule remove_MHC_from_peaks:
+    input:   bed = "../results/05PEAKS/{CELL_TYPE}.hg19.ext250bp.bed",
+             MHC = "../resources/sheets/MHC.hg19.bed"
+    output:  "../results/peaks/{CELL_TYPE}.hg19.ext250bp.noMHC.bed"
+    message: "Removing MHC regions from {wildcards.CELL_TYPE}"
+    log:     "../results/00LOGS/06LDSR/{CELL_TYPE}.hg19.noMHC.log"
+    envmodules: "bedtools"
+    shell:
+        """
+        
+	bedtools subtract -a {input.bed} -b {input.MHC} -A > {output}
+
+        """ 
+
 rule ldsr_make_annot:
     # Input can be bed file with gene boundaries or gene set with separate gene coord file
-    input:   bed_file = "../results/05PEAKS/{CELL_TYPE}.hg19.ext250bp.bed",
+    input:   bed_file = "../results/peaks/{CELL_TYPE}.hg19.ext250bp.noMHC.bed",
              bim_file = "../resources/ldsr/reference_files/1000G_EUR_Phase3_plink/1000G.EUR.QC.{CHR}.bim"
     output:  "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.annot.gz"
     conda:   "../envs/ldsr.yml"
@@ -100,16 +114,17 @@ rule ldsr_stratified_baseline_v12:
              baseline = "../resources/ldsr/reference_files/baseline_v1.2_1000G_Phase3/baseline.",
              frqfile = "../resources/ldsr/reference_files/1000G_Phase3_frq/1000G.EUR.QC.",
              LD_anns = "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.",
+             cond_anns = "../results/06LDSR/annotation_files/snATACseq.union.{GENE_WINDOW}.",
              out_file = "../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}_baseline.v1.2"
     message: "Running Prt Hrt with {wildcards.CELL_TYPE} {wildcards.GENE_WINDOW} and {wildcards.GWAS} GWAS"
     log:     "../results/00LOGS/06LDSR/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}.baseline.v1.2_partHerit.log"
     shell:
              "python ../resources/ldsr/ldsc.py --h2 {input.GWAS} --w-ld-chr {params.weights} "
-             "--ref-ld-chr {params.baseline},{params.LD_anns} --overlap-annot "
+             "--ref-ld-chr {params.baseline},{params.cond_anns},{params.LD_anns} --overlap-annot "
              "--frqfile-chr {params.frqfile} --out {params.out_file} --print-coefficients 2> {log}"
 
 rule ldsr_stratified_summary:
-    # This is still optimised for multiple quantiles so creating > 100 single line files
+    # Careful here: L2_1 if no covariates, L2_2 if one covariate last number increasing for each additional covariate
     input:   expand("../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}_baseline.v1.2.results", CELL_TYPE = config["CELL_TYPES"], GENE_WINDOW = config["GENE_WINDOW"], GWAS = config["LDSR_GWAS"])
     output:  "../results/06LDSR/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv"
     message: "Creating summary file for {wildcards.GWAS} GWAS"
@@ -124,7 +139,7 @@ rule ldsr_stratified_summary:
              Lines=$(cat $File)
              for Line in $Lines
              do
-             grep L2_1 {params.dir}snATACseq."$Line".{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_1/$Line/g" >> {output} 2> {log}
+             grep L2_2 {params.dir}snATACseq."$Line".{wildcards.GWAS}_baseline.v1.2.results | sed "s/L2_2/$Line/g" >> {output} 2> {log}
              done
 
              """

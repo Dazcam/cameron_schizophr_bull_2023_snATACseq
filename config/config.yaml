@@ -18,7 +18,7 @@ CELL_TYPES:
     LGE:
     MGE:
     progenitor:
-    union:
+#    union:
 
 GENE_WINDOW:
     100UP_100DOWN:
@@ -36,6 +36,40 @@ LDSR_CELL_TYPES:
     GE.RG:
     GE.Undef:
     GE.UNION:
+
+ZIFFRA_CELL_TYPES:
+    AstroOligo_ziffra_macs2peaks_100UP_100DOWN:
+    AstroOligo_ziffra_specificpeaks_100UP_100DOWN:
+    dlEN_ziffra_macs2peaks_100UP_100DOWN:
+    dlEN_ziffra_specificpeaks_100UP_100DOWN:
+    earlyEN_ziffra_macs2peaks_100UP_100DOWN:
+    earlyEN_ziffra_specificpeaks_100UP_100DOWN:
+    EndoMural_ziffra_macs2peaks_100UP_100DOWN:
+    EndoMural_ziffra_specificpeaks_100UP_100DOWN:
+    IN_CGE_ziffra_macs2peaks_100UP_100DOWN:
+    IN_CGE_ziffra_specificpeaks_100UP_100DOWN:
+    IN_MGE_ziffra_macs2peaks_100UP_100DOWN:
+    IN_MGE_ziffra_specificpeaks_100UP_100DOWN:
+    Insula_ziffra_macs2peaks_100UP_100DOWN:
+    Insula_ziffra_specificpeaks_100UP_100DOWN:
+    IPC_ziffra_macs2peaks_100UP_100DOWN:
+    IPC_ziffra_specificpeaks_100UP_100DOWN:
+    MGE_ziffra_macs2peaks_100UP_100DOWN:
+    MGE_ziffra_specificpeaks_100UP_100DOWN:
+    Microglia_ziffra_macs2peaks_100UP_100DOWN:
+    Microglia_ziffra_specificpeaks_100UP_100DOWN:
+    RG_ziffra_macs2peaks_100UP_100DOWN:
+    RG_ziffra_specificpeaks_100UP_100DOWN:
+    ulEN_ziffra_macs2peaks_100UP_100DOWN:
+    ulEN_ziffra_specificpeaks_100UP_100DOWN:
+
+COND_CELL_TYPES:
+    dlEN_ziffra_macs2peaks_100UP_100DOWN:
+    dlEN_ziffra_specificpeaks_100UP_100DOWN:   
+    earlyEN_ziffra_macs2peaks_100UP_100DOWN:
+    earlyEN_ziffra_specificpeaks_100UP_100DOWN:
+    ulEN_ziffra_macs2peaks_100UP_100DOWN:
+    ulEN_ziffra_specificpeaks_100UP_100DOWN:
 
 LDSR_GWAS:
     SCZ:
