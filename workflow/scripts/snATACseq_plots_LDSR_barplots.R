@@ -30,39 +30,44 @@ ldsr_grp_df <- rbind(SCZ_ldsr, HEIGHT_ldsr) %>%
   separate_wider_delim(Category, '.', names = c('cell_type', 'suffix')) %>%
   select(-suffix) %>%
   dplyr::mutate(across(c('cell_type'), str_replace, 'progenitor', 'Progenitor')) %>%
-  mutate(across('cell_type', str_replace, 'E', 'E-InN'))
+  mutate(across('cell_type', str_replace, 'GE', 'GE-N'))
 
-ldsr_grp_df$cell_type <- factor(ldsr_grp_df$cell_type, 
-                                levels=c("CGE-InN", "MGE-InN", "LGE-InN", "Progenitor"))
-ldsr_grp_df$GWAS <- factor(ldsr_grp_df$GWAS, levels=c('SCZ', 'HEIGHT'))
+for (GWAS in GWASs) {
+  
+  ldsr_grp_df_subset <- ldsr_grp_df %>% filter(GWAS == (!!GWAS))
+  
 
-ldsr_plot <- ggplot(ldsr_grp_df, aes(fill = cell_type, y = LDSR, x = GWAS)) + 
-  geom_bar(position = position_dodge2(reverse = TRUE), stat = "identity") +
-  theme_bw() +
-  coord_flip() +
-  facet_grid(cols = vars(REGION), rows = vars(GWAS), scales = 'free_y') +
-  ylab(expression(-log[10](P))) +
-  xlab(NULL) +
-  geom_hline(yintercept=-log10(0.05/8), linetype = "dashed", color = "black") +
-  geom_hline(yintercept=-log10(0.05), linetype = "dotted", color = "black") +
-  theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(colour = "black", size = 1),
-        plot.title = element_text(hjust = 0.5, face = 'bold'),
-        axis.title.x = element_text(colour = "#000000", size = 14),
-        axis.title.y = element_text(colour = "#000000", size = 14),
-        axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
-        axis.text.y  = element_text(colour = "#000000", size = 13),
-        axis.ticks.y = element_blank(),
-        strip.background = element_blank(),
-        strip.text.x = element_text(size = 14),
-        strip.text.y = element_blank(),
-        legend.title = element_blank(), 
-        legend.text = element_text(size = 12),
-        panel.spacing.x = unit(2, "lines")) +
-  scale_fill_manual(values = c('#6098ab','#f18e2a', '#e1575a', '#58a14e', '#75b7b2', 
-                               '#edc949', '#b07aa1', '#ff9ca7', '#9c755f', '#bab0ab'))
+  ldsr_grp_df_subset$cell_type <- factor(ldsr_grp_df_subset$cell_type, 
+                                  levels=c("CGE-N", "MGE-N", "LGE-N", "Progenitor"))
+  
+  LDSR_PLOT <- ggplot(data = ldsr_grp_df_subset, aes(x = LDSR, y = factor(cell_type, rev(levels(factor(cell_type)))), 
+                             fill = cell_type)) +
+    geom_bar(stat = "identity", color = 'black', position = "dodge") +
+    geom_vline(xintercept=-log10(0.05/4), linetype = "dashed", color = "black") +
+    geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
+    theme_bw() +
+    ggtitle(GWAS) +
+    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.border = element_rect(colour = "black", size = 1),
+          plot.title = element_text(hjust = 0.5, face = 'bold'),
+          axis.title.x = element_text(colour = "#000000", size = 14),
+          axis.title.y = element_text(colour = "#000000", size = 14),
+          axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
+          axis.text.y  = element_text(colour = "#000000", size = 13),
+          legend.position = "none") +
+    xlab(expression(-log[10](P))) +
+    ylab('Cell type') +
+    xlim(0, 11.5) +
+    scale_fill_manual(values = c('#6098ab','#f18e2a', '#e1575a', '#58a14e', '#75b7b2', 
+                                 '#edc949', '#b07aa1', '#ff9ca7', '#9c755f', '#bab0ab'))
+  
+  assign(paste0('ldsr_', GWAS, '_plot'), LDSR_PLOT, .GlobalEnv)
+
+}
+  
+plot_grid(ldsr_SCZ_plot, ldsr_HEIGHT_plot, labels = c('AUTO'), label_size = 20)
 
 
 # Color scheme - to match UMAPs
@@ -85,21 +90,24 @@ ldsr_grp_cond_df <- rbind(SCZ_ldsr_cond, HEIGHT_ldsr_cond) %>%
   mutate(first_letter = substr(suffix, 1, 1)) %>%
   mutate(cell_type = paste(cell_type, first_letter, sep = '_')) %>%
   dplyr::mutate(across(c('cell_type'), str_replace, 'progenitor', 'Progenitor')) %>%
-  mutate(across('cell_type', str_replace, 'GE', 'GE-InN'))
+  mutate(across('cell_type', str_replace, 'GE', 'GE-N')) %>%
+  mutate(across('cell_type', str_replace_all, '_', '-')) %>%
+  filter(GWAS == 'SCZ') %>%
+  mutate(across('cell_type', str_replace, '-m', '-macs2')) %>%
+  mutate(across('cell_type', str_replace, '-s', '-spec'))
+
   
 #  select(-suffix) %>%
 #  dplyr::mutate(across(c('cell_type'), str_replace, 'progenitor', 'Progenitor')) %>%
 #  mutate(across('cell_type', str_replace, 'E', 'E-InN'))
 
-ldsr_cond_plot <- ggplot(ldsr_grp_cond_df, aes(fill = cell_type, y = LDSR, x = GWAS)) + 
-  geom_bar(position = position_dodge2(reverse = TRUE), stat = "identity") +
+ldsr_cond_plot <- ggplot(data = ldsr_grp_cond_df, aes(x = LDSR, y = factor(cell_type, rev(levels(factor(cell_type)))), 
+                                                        fill = cell_type)) +
+  geom_bar(stat = "identity", color = 'black', position = "dodge") +
+  geom_vline(xintercept=-log10(0.05/24), linetype = "dashed", color = "black") +
+  geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
   theme_bw() +
-  coord_flip() +
-  facet_grid(cols = vars(REGION), rows = vars(GWAS), scales = 'free_y') +
-  ylab(expression(-log[10](P))) +
-  xlab(NULL) +
-  geom_hline(yintercept=-log10(0.05/8), linetype = "dashed", color = "black") +
-  geom_hline(yintercept=-log10(0.05), linetype = "dotted", color = "black") +
+  ggtitle('SCZ') +
   theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
@@ -109,13 +117,10 @@ ldsr_cond_plot <- ggplot(ldsr_grp_cond_df, aes(fill = cell_type, y = LDSR, x = G
         axis.title.y = element_text(colour = "#000000", size = 14),
         axis.text.x  = element_text(colour = "#000000", size = 13, vjust = 0.5),
         axis.text.y  = element_text(colour = "#000000", size = 13),
-        axis.ticks.y = element_blank(),
-        strip.background = element_blank(),
-        strip.text.x = element_text(size = 14),
-        strip.text.y = element_blank(),
-        legend.title = element_blank(), 
-        legend.text = element_text(size = 12),
-        panel.spacing.x = unit(2, "lines")) +
+        legend.position = "none") +
+  xlab(expression(-log[10](P))) +
+  ylab('Cell type') +
+  xlim(0, 11.5) +
   scale_fill_manual(values = c('#6098ab', '#6098ab', '#6098ab', '#6098ab', '#6098ab', '#6098ab',
                                '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a',
                                '#e1575a', '#e1575a', '#e1575a', '#e1575a', '#e1575a', '#e1575a',  
