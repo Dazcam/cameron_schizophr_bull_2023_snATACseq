@@ -76,19 +76,20 @@ rule ldsr_cond_ld_scores:
 rule ldsr_cond_stratified_baseline_v12:
     # Needs to be run after standard, non-conditional analyses - note we have union and Ziffra peaks in model
     input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_ldsc_ready.sumstats.gz",
-             LDSR = expand("../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.100UP_100DOWN.{CHR}.l2.ldscore.gz", CELL_TYPE = config["CELL_TYPES"], CHR = range(1,23)),
-             COND = expand("../results/06LDSR/ZIFFRA_PEAKS/annotation_files/snATACseq.{COND_CELL_TYPE}.{CHR}.l2.ldscore.gz", COND_CELL_TYPE = config["COND_CELL_TYPES"], CHR = range(1,23))
-    output:  "../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}_baseline.v1.2.results"
+             LDSR = expand("../results/06LDSR/annotation_files/snATACseq.{SLDSR_CELL_TYPE}.{CHR}.l2.ldscore.gz", SLDSR_CELL_TYPE = config["SLDSR_CELL_TYPES"], CHR = range(1,23)),
+             COND = expand("../results/06LDSR/ZIFFRA_PEAKS/annotation_files/snATACseq.{COND_CELL_TYPE}.{CHR}.l2.ldscore.gz", COND_CELL_TYPE = config["COND_CELL_TYPES"], CHR = range(1,23)),
+             UNION = expand("../results/06LDSR/annotation_files/snATACseq.union.{CHR}.l2.ldscore.gz", CHR = range(1,23))   
+    output:  "../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}_baseline.v1.2.results"
     conda:   "../envs/ldsr.yml"
     params:  weights = "../resources/ldsr/reference_files/weights_hm3_no_hla/weights.",
              baseline = "../resources/ldsr/reference_files/baseline_v1.2_1000G_Phase3/baseline.",
              frqfile = "../resources/ldsr/reference_files/1000G_Phase3_frq/1000G.EUR.QC.",
-             LD_anns = "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.100UP_100DOWN.",
-             cond_union = "../results/06LDSR/annotation_files/snATACseq.union.100UP_100DOWN.",
+             LD_anns = "../results/06LDSR/annotation_files/snATACseq.{SLDSR_CELL_TYPE}.",
+             cond_union = "../results/06LDSR/annotation_files/snATACseq.union.",
              cond_anns = "../results/06LDSR/ZIFFRA_PEAKS/annotation_files/snATACseq.{COND_CELL_TYPE}.",
-             out_file = "../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}_baseline.v1.2"
-    message: "Running conditional Prt Hrt with {wildcards.CELL_TYPE} vs. {wildcards.COND_CELL_TYPE} and {wildcards.GWAS} GWAS"
-    log:     "../results/00LOGS/06LDSR/ZIFFRA_PEAKS/snATACseq.{CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}.baseline.v1.2_partHerit.log"
+             out_file = "../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}_baseline.v1.2"
+    message: "Running conditional Prt Hrt with {wildcards.SLDSR_CELL_TYPE} vs. {wildcards.COND_CELL_TYPE} and {wildcards.GWAS} GWAS"
+    log:     "../results/00LOGS/06LDSR/ZIFFRA_PEAKS/snATACseq.{SLDSR_CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}.baseline.v1.2_partHerit.log"
     shell:
              "python ../resources/ldsr/ldsc.py --h2 {input.GWAS} --w-ld-chr {params.weights} "
              "--ref-ld-chr {params.baseline},{params.cond_union},{params.cond_anns},{params.LD_anns} --overlap-annot "
@@ -96,7 +97,7 @@ rule ldsr_cond_stratified_baseline_v12:
 
 rule ldsr_cond_stratified_summary:
     # Careful here: L2_1 if no covariates, L2_2 if one covariate last number increasing for each additional covariate
-    input:   expand("../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}_baseline.v1.2.results", CELL_TYPE = config["CELL_TYPES"], COND_CELL_TYPE = config["COND_CELL_TYPES"], GWAS = config['LDSR_GWAS'])
+    input:   expand("../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}_vs_{COND_CELL_TYPE}.{GWAS}_baseline.v1.2.results", SLDSR_CELL_TYPE = config["SLDSR_CELL_TYPES"], COND_CELL_TYPE = config["COND_CELL_TYPES"], GWAS = config['LDSR_GWAS'])
     output:  "../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv"
     message: "Creating summary file for {wildcards.GWAS} GWAS"
     params:  dir = "../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/",
@@ -105,7 +106,7 @@ rule ldsr_cond_stratified_summary:
     shell:
              """
              
-             head -1 {params.dir}snATACseq.CGE_vs_dlEN_ziffra_macs2peaks_100UP_100DOWN.SCZ_baseline.v1.2.results > {output}
+             head -1 {params.dir}snATACseq.CGE_vs_dlEN_ziffra_macs2peaks.SCZ_baseline.v1.2.results > {output}
              File={params.cell_types}
              Lines=$(cat $File)
              for Line in $Lines

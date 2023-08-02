@@ -11,5 +11,6 @@ rule all:
     input:
         expand("../results/04FRAGMENT_FILES/{SAMPLE}.stamp", SAMPLE = config['SAMPLES_ATAC']),
         expand("../results/03MARKDOWN/snATACseq_QC_{REGION}.html", REGION = config['ATAC_REGIONS']),
+        expand("../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{CHR}.l2.ldscore.gz", CELL_TYPE = config["CELL_TYPES"], CHR = range(1,23)),
         expand("../results/06LDSR/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['LDSR_GWAS']),        
         expand("../results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv", GWAS = config['LDSR_GWAS']) 

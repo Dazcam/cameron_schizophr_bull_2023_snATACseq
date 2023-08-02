@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------
 #
 #
-#    Script for running LDSC on snRNA-seq data
+#    Script for running SLDSC on snATAC-seq data
 #
 #
 # -------------------------------------------------------------------------------------
@@ -57,26 +57,12 @@ rule ldsr_make_annot:
     # Input can be bed file with gene boundaries or gene set with separate gene coord file
     input:   bed_file = "../results/peaks/{CELL_TYPE}.hg19.ext250bp.noMHC.bed",
              bim_file = "../resources/ldsr/reference_files/1000G_EUR_Phase3_plink/1000G.EUR.QC.{CHR}.bim"
-    output:  "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.annot.gz"
+    output:  "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{CHR}.annot.gz"
     conda:   "../envs/ldsr.yml"
-    message: "Creating annotation files for snATACseq: {wildcards.CELL_TYPE}, {wildcards.GENE_WINDOW}, Chr {wildcards.CHR}"
-    log:     "../results/00LOGS/06LDSR/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.Chr{CHR}.log"
+    message: "Creating annotation files for snATACseq: {wildcards.CELL_TYPE}, Chr {wildcards.CHR}"
+    log:     "../results/00LOGS/06LDSR/snATACseq.{CELL_TYPE}.Chr{CHR}.log"
     shell:
              """
-             
-             WINDOW=({wildcards.GENE_WINDOW})
-             if [ "${{WINDOW}}" == "100UP_100DOWN" ]; then
-             
-             echo $WINDOW
-             python ../resources/ldsr/make_annot.py \
-             --bed-file {input.bed_file} \
-             --windowsize 100000 \
-             --bimfile {input.bim_file} \
-             --annot-file {output} 2> {log}
-             
-             else 
-          
-             echo $WINDOW
              
              python ../resources/ldsr/make_annot.py \
              --bed-file {input.bed_file} \
@@ -84,22 +70,20 @@ rule ldsr_make_annot:
              --bimfile {input.bim_file} \
              --annot-file {output} 2> {log}             
              
-             fi
-             
              """
 
 
 rule ldsr_ld_scores:
-    input:   annot = "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.annot.gz",
+    input:   annot = "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{CHR}.annot.gz",
              bfile_folder = "../resources/ldsr/reference_files/1000G_EUR_Phase3_plink",
              snps_folder = "../resources/ldsr/reference_files/hapmap3_snps"
-    output:  "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.l2.ldscore.gz"
+    output:  "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{CHR}.l2.ldscore.gz"
     conda:   "../envs/ldsr.yml"
     params:  bfile = "../resources/ldsr/reference_files/1000G_EUR_Phase3_plink/1000G.EUR.QC.{CHR}",
-             ldscores = "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}",
+             ldscores = "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{CHR}",
              snps = "../resources/ldsr/reference_files/w_hm3.snplist_rsIds"
-    message: "Running LDSR Phase 3 for {wildcards.CELL_TYPE}, {wildcards.GENE_WINDOW}, CHR {wildcards.CHR}" 
-    log:     "../results/00LOGS/06LDSR/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.Chr{CHR}_ldsc.log"
+    message: "Running LDSR Phase 3 for {wildcards.CELL_TYPE}, CHR {wildcards.CHR}" 
+    log:     "../results/00LOGS/06LDSR/snATACseq.{CELL_TYPE}.Chr{CHR}_ldsc.log"
     shell:
         "python ../resources/ldsr/ldsc.py --thin-annot --l2 --bfile {params.bfile} --ld-wind-cm 1 "
         "--annot {input.annot} --out {params.ldscores} --print-snps {params.snps} 2> {log}"
@@ -107,17 +91,17 @@ rule ldsr_ld_scores:
 
 rule ldsr_stratified_baseline_v12:
     input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_ldsc_ready.sumstats.gz",
-             LDSR = expand("../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{CHR}.l2.ldscore.gz", CELL_TYPE = config["CELL_TYPES"], GENE_WINDOW = config["GENE_WINDOW"], CHR = range(1,23))
-    output:  "../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}_baseline.v1.2.results"
+             LDSR = expand("../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{CHR}.l2.ldscore.gz", CELL_TYPE = config["CELL_TYPES"], CHR = range(1,23))
+    output:  "../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}.{GWAS}_baseline.v1.2.results"
     conda:   "../envs/ldsr.yml"
     params:  weights = "../resources/ldsr/reference_files/weights_hm3_no_hla/weights.",
              baseline = "../resources/ldsr/reference_files/baseline_v1.2_1000G_Phase3/baseline.",
              frqfile = "../resources/ldsr/reference_files/1000G_Phase3_frq/1000G.EUR.QC.",
-             LD_anns = "../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.",
-             cond_anns = "../results/06LDSR/annotation_files/snATACseq.union.{GENE_WINDOW}.",
-             out_file = "../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}_baseline.v1.2"
-    message: "Running Prt Hrt with {wildcards.CELL_TYPE} {wildcards.GENE_WINDOW} and {wildcards.GWAS} GWAS"
-    log:     "../results/00LOGS/06LDSR/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}.baseline.v1.2_partHerit.log"
+             LD_anns = "../results/06LDSR/annotation_files/snATACseq.{SLDSR_CELL_TYPE}.",
+             cond_anns = "../results/06LDSR/annotation_files/snATACseq.union.",
+             out_file = "../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}.{GWAS}_baseline.v1.2"
+    message: "Running Prt Hrt with {wildcards.SLDSR_CELL_TYPE} and {wildcards.GWAS} GWAS"
+    log:     "../results/00LOGS/06LDSR/snATACseq.{SLDSR_CELL_TYPE}.{GWAS}.baseline.v1.2_partHerit.log"
     shell:
              "python ../resources/ldsr/ldsc.py --h2 {input.GWAS} --w-ld-chr {params.weights} "
              "--ref-ld-chr {params.baseline},{params.cond_anns},{params.LD_anns} --overlap-annot "
@@ -125,7 +109,7 @@ rule ldsr_stratified_baseline_v12:
 
 rule ldsr_stratified_summary:
     # Careful here: L2_1 if no covariates, L2_2 if one covariate last number increasing for each additional covariate
-    input:   expand("../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GENE_WINDOW}.{GWAS}_baseline.v1.2.results", CELL_TYPE = config["CELL_TYPES"], GENE_WINDOW = config["GENE_WINDOW"], GWAS = config["LDSR_GWAS"])
+    input:   expand("../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}.{GWAS}_baseline.v1.2.results", SLDSR_CELL_TYPE = config["SLDSR_CELL_TYPES"], GWAS = config["LDSR_GWAS"])
     output:  "../results/06LDSR/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv"
     message: "Creating summary file for {wildcards.GWAS} GWAS"
     params:  dir = "../results/06LDSR/part_herit/baseline_v1.2/",
@@ -134,7 +118,7 @@ rule ldsr_stratified_summary:
     shell:
              """
              
-             head -1 {params.dir}snATACseq.LGE.100UP_100DOWN.SCZ_baseline.v1.2.results > {output}
+             head -1 {params.dir}snATACseq.LGE.SCZ_baseline.v1.2.results > {output}
              File={params.cell_types}
              Lines=$(cat $File)
              for Line in $Lines

@@ -21,29 +21,30 @@ snATAC_seq_QC:
 snATAC_remove_batch_effects:
     num_cores: 12
     total_mem: 96G
+
 # -------  MUNGE SUMSTATS  ---------
 standardise_phenotype_sumstats:
     num_cores: 1
-    maxvmem: 20G
+    total_mem: 20G
     duration: 3-00:00:00
 sumstats_for_ldsc_hg19:
     num_cores: 1
-    maxvmem: 20G
+    total_mem: 20G
     duration: 3-00:00:00
 
 # -----------  LDSR  ---------------
 ldsr_make_annot:
     num_cores: 1
-    maxvmem: 10G
+    total_mem: 10G
 ldsr_ld_scores:
     num_cores: 1
-    maxvmem: 10G
+    total_mem: 10G
 ldsr_stratified_baseline_v12:
     num_cores: 1
-    maxvmem: 20G
+    total_mem: 20G
 partitioned_heritability_conditional:
     num_cores: 1
-    maxvmem: 20G
+    total_mem: 20G
 
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------
