@@ -25,6 +25,9 @@ PEAKS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/05PEAKS/'
 SCRIPT_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/workflow/scripts/'
 RESULTS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/'
 
+RUN_MOTIFS <- FALSE
+RUN_MRKDN <- FALSE
+
 # Load functions
 source('~/Desktop/fetal_brain_snATACseq_V3_010323/workflow/scripts/snATACseq_functions.R')
 
@@ -75,7 +78,7 @@ for (REGION in c('lge', 'cge', 'mge')) {
   
   OVERLAPS <- findOverlapsOfPeaks(PEAKS, MSCOFF_PEAKS, minoverlap = 100)
   VENN <- makeVennDiagram(OVERLAPS, minoverlap = 100)
-  VENN2 <- pairwise_venn(VENN, toupper(REGION), 
+  VENN2 <- pairwise_venn(VENN, paste0(toupper(REGION), '-N'), 
                          paste0(toupper(REGION), '-Mscoff')) 
   
   UNIQUE_PEAKS <- peaks <- OVERLAPS$peaklist$PEAKS
@@ -95,25 +98,32 @@ for (REGION in c('lge', 'cge', 'mge')) {
 cat('\nFinding overlaps for GE InNs ... \n\n')
 overlaps_ge_ins <- findOverlapsOfPeaks(cge_hg38_peaks, lge_hg38_peaks, mge_hg38_peaks, minoverlap = 100)
 venn_ge_ins <- makeVennDiagram(overlaps_ge_ins, minoverlap = 100)
-venn2_ge_ins <- threeway_venn(venn_ge_ins, 'CGE-InN','LGE-InN','MGE-InN') 
+venn2_ge_ins <- threeway_venn(venn_ge_ins, 'CGE-N','LGE-N','MGE-N') 
 all_venn_plot <- plot_grid(venn2_ge_ins, mge_2way_venn2, lge_2way_venn2, cge_2way_venn2, 
                            scale = c(1, 0.8, 0.8, 0.8))
 all_venn_plot
 
+# Run motif enrichment - takes about 40mins
+if (RUN_MOTIFS == TRUE) {
+  
+  
+  mge_uniq_motif_plot <- run_motif_analysis(mge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'mge')
+  lge_uniq_motif_plot <- run_motif_analysis(lge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'lge')
+  cge_uniq_motif_plot <- run_motif_analysis(cge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'cge')
+  #cge_mscoff_uniq_motif_plot <- run_motif_analysis(cge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
+  #lge_mscoff_uniq_motif_plot <- run_motif_analysis(lge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
+  #mge_mscoff_uniq_motif_plot <- run_motif_analysis(mge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
 
-# Run motif enrichment
-mge_uniq_motif_plot <- run_motif_analysis(mge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'mge')
-lge_uniq_motif_plot <- run_motif_analysis(lge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'lge')
-cge_uniq_motif_plot <- run_motif_analysis(cge_2way_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30, 'cge')
-#cge_mscoff_uniq_motif_plot <- run_motif_analysis(cge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-#lge_mscoff_uniq_motif_plot <- run_motif_analysis(lge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-#mge_mscoff_uniq_motif_plot <- run_motif_analysis(mge_2way_mscoff_uniq_peaks, BSgenome.Hsapiens.UCSC.hg19, 30)
-
+}
 
 ##  Create markdown html  -------------------------------------------------------------
-render(paste0(SCRIPT_DIR, 'snATACseq_peak_overlap_and_motif_enrich.Rmd'),
-       output_file = paste0('snATACseq_peak_overlap_and_motif_enrich.html'),
-       output_dir = paste0(RESULTS_DIR, '03MARKDOWN'))
+if (RUN_MRKDN == TRUE) {
+
+    render(paste0(SCRIPT_DIR, 'snATACseq_peak_overlap_and_motif_enrich.Rmd'),
+         output_file = paste0('snATACseq_peak_overlap_and_motif_enrich.html'),
+         output_dir = paste0(RESULTS_DIR, '03MARKDOWN'))
+
+}
 
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
