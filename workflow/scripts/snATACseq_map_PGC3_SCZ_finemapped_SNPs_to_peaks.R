@@ -280,8 +280,7 @@ for (EXT in c(PEAK_EXTENSION)) {
 
 cat('Done.')
 
-#Bring the Wilcoxon test outside the loop:
-
+# Bring the Wilcoxon test outside the loop  -------------------------------------------
 SNPS_FINAL_DF_NO_PEAKS <- read_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
                                           PEAK_EXTENSION, '_SNPs_only.tsv'))
 SNPS_FINAL_DF_WITH_PEAKS <- read_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
@@ -311,5 +310,58 @@ boxplot(SNPS_FINAL_DF_PPs, PGC3_SNPS_PPs)
 
 median(SNPS_FINAL_DF_PPs)
 median(PGC3_SNPS_PPs)
+
+SNPS_FINAL_DF_WITH_PEAKS %>%
+  dplyr::select(CGE, LGE, MGE, Progenitor) %>%
+  colSums()
+
+## Annotate peaks containing a PGC3 SCZ GWAS SNP  -------------------------------------
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+
+# Repitools::annoDF2GR()
+# Repitools::annoGR2DF()
+# Make Granges object
+snps_withPeak_gr <- GenomicRanges::makeGRangesFromDataFrame(SNPS_FINAL_DF_WITH_PEAKS %>% 
+                                               dplyr::relocate(chr, start, end), 
+                         keep.extra.columns = TRUE,
+                         ignore.strand = TRUE)
+
+# Annotate peaks
+cat('\n\nAnnotating peaks with SNP ... \n\n\n')
+snps_withPeak_ann <- ChIPseeker::annotatePeak(snps_withPeak_gr, tssRegion = c(-1000, 100),
+                                              TxDb = txdb, annoDb = "org.Hs.eg.db", level = 'gene')
+
+# Add annotations to original df and save
+snps_withPeak_ann_df <- SNPS_FINAL_DF_WITH_PEAKS %>%
+  left_join(as_tibble(Repitools::annoGR2DF(snps_withPeak_ann@anno)), 
+            join_by(chr, start, end),
+            relationship = 'many-to-many') %>%
+  distinct() %>% # Note that mapping is many to many as some peaks map to same promoter
+  write_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
+                  PEAK_EXTENSION, '_with_peaks_and_anns.tsv'))
+  
+  
+# Find Peaks containing SNP that are annotated to PGC3 SCZ GWAS prioritised gene ------
+# Load and pull out PGC prioritized genes
+pgc_gene_df <- read_excel(paste0(IN_DIR, 'Supplementary Table 12.xlsx'), 
+                          sheet = 'Prioritised')
+
+# Find peaks with SNPs annotated to genes in PGC3 prioritized list
+pgc_gene_list <- pgc_gene_df %>% pull(Symbol.ID) %>% unique()
+snps_withPeak_near_gene <- snps_withPeak_ann_df %>%
+  filter(SYMBOL %in% pgc_gene_list) %>% 
+  unique() %>% # Note some look like dups here but either rsID or peak is unique on similar entries
+  write_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
+                   PEAK_EXTENSION, '_with_peaks_and_PGC3_gene.tsv'))
+
+# Pull out PGC3 prioritized genes annotated to peaks containing SNP
+peak_gene_list <- snps_withPeak_near_gene %>% pull(SYMBOL) %>% unique()
+pgc_gene_peak_with_snp_df <- pgc_gene_df %>%
+  filter(Symbol.ID %in% peak_gene_list) %>%
+  unique() %>%
+  write_tsv(paste0(SNP_DIR, 'pgc3_scz_prioritised_genes_ann_to_peak.tsv'))
+
+
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------

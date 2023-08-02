@@ -59,7 +59,7 @@ for (GWAS in GWASs) {
           legend.position = "none") +
     xlab(expression(-log[10](P))) +
     ylab('Cell type') +
-    xlim(0, 11.5) +
+    xlim(0, 8) +
     scale_fill_manual(values = c('#6098ab','#f18e2a', '#e1575a', '#58a14e', '#75b7b2', 
                                  '#edc949', '#b07aa1', '#ff9ca7', '#9c755f', '#bab0ab'))
   
@@ -120,7 +120,7 @@ ldsr_cond_plot <- ggplot(data = ldsr_grp_cond_df, aes(x = LDSR, y = factor(cell_
         legend.position = "none") +
   xlab(expression(-log[10](P))) +
   ylab('Cell type') +
-  xlim(0, 11.5) +
+  xlim(0, 8) +
   scale_fill_manual(values = c('#6098ab', '#6098ab', '#6098ab', '#6098ab', '#6098ab', '#6098ab',
                                '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a',
                                '#e1575a', '#e1575a', '#e1575a', '#e1575a', '#e1575a', '#e1575a',  

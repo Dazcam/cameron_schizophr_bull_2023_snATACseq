@@ -278,7 +278,7 @@ markersPeaks <- getMarkerFeatures(
   useMatrix = "PeakMatrix", 
   groupBy = 'predicted.id',
   bias = c("TSSEnrichment", "log10(nFrags)"),
-  testMethod = "wilcoxon", )
+  testMethod = "wilcoxon")
 
 enrichMotifs <- peakAnnoEnrichment(
   seMarker = markersPeaks,
@@ -287,10 +287,24 @@ enrichMotifs <- peakAnnoEnrichment(
   cutOff = "FDR <= 0.1 & Log2FC >= 0.5"
 )
 
+colnames(enrichMotifs) <- c(' CGE-N', ' LGE-N', ' MGE-N', ' Progenitor') # Add space to make plot look nice
+rownames(enrichMotifs) <- rownames(enrichMotifs) %>% str_extract(".*(?=\\_)") 
+rownames(enrichMotifs) <- paste0(" ", rownames(enrichMotifs)) # Add space to make plot look nice
+
+  
+heatmap_mat <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE, returnMatrix = T)
 heatmapEM <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE)
+heatmapEM <- Heatmap(heatmap_mat, name = "mat", col = paletteContinuous(set = "comet", n = 100),
+        show_column_dend = FALSE, show_row_dend = FALSE, rect_gp = gpar(col = "grey", lwd = 1),
+        heatmap_legend_param = list(title = NULL, legend_direction = "horizontal", 
+                                    labels_gp = gpar(fontsize = 16),
+                                    grid_height = unit(1, "cm"), 
+                                    grid_width = unit(5, "mm")), 
+        column_names_side = c("top"), row_names_gp = gpar(fontsize = 18))
 ComplexHeatmap::draw(heatmapEM, 
                      heatmap_legend_side = "bot", 
                      annotation_legend_side = "bot")
+         
 
 
 ## Peak coaccessibility  --------------------------------------------------------------

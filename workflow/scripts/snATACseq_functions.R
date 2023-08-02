@@ -56,6 +56,139 @@ set_filter_params <- function(
 
 }
 
+# QC functions
+create_archR_tss_frag_plot <- function(ARCHR_OBJ, SAMPLE_ID) {
+  
+  #' Create archR TTS enrichment by frags plot for snATACseq sample 
+  #' 
+  #' @description 
+  #' 
+  #' @param ARCHR_OBJ: An ArchR object
+  #' @param SAMPLE_ID: The ID of the individual sample to create plot for
+  #' 
+  #' @returns A TTS enrichment by frags QC plot
+  
+  message('Generating a TTS enrichment by frags QC plot for: ', SAMPLE_ID)
+  
+  plot_df <- getCellColData(ARCHR_OBJ) %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(log10nFrags = log10(nFrags)) %>%
+    dplyr::select(TSSEnrichment, log10nFrags, Sample) %>%
+    filter(Sample == SAMPLE_ID)
+  
+  SAMPLE <- stringr::str_extract(SAMPLE_ID, "[[:digit:]]+")
+  
+  QC_tss_uFrag_plot <- ggPoint(
+    x = plot_df$log10nFrags, 
+    y = plot_df$TSSEnrichment, 
+    title = SAMPLE,
+    colorDensity = TRUE,
+    continuousSet = "sambaNight",
+    xlim = c(log10(500), quantile(plot_df$log10nFrags, probs = 0.99)),
+    ylim = c(0, quantile(plot_df$TSSEnrichment, probs = 0.99))) + 
+    geom_hline(yintercept = 4, lty = "dashed") + 
+    geom_vline(xintercept = 3.5, lty = "dashed") +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+          # panel.grid.major = element_blank(), 
+          # panel.grid.minor = element_blank(),
+          panel.border = element_rect(colour = "black", size = 0.8),
+          plot.title = element_text(hjust = 0.5, face = 'bold', size = 16),
+          axis.title.x = element_text(colour = "#000000", size = 13, vjust = -0.5),
+          axis.title.y = element_text(colour = "#000000", size = 13),
+          axis.text.x  = element_text(colour = "#000000", size = 13, angle = 45, hjust=1),
+          axis.text.y  = element_text(colour = "#000000", size = 13),
+          legend.position = c(.2, .6),
+          legend.direction = "vertical",
+          legend.text = element_text(size = 12),
+          legend.title = element_blank()) +
+    xlab(expression(log[10]('Unique Fragments'))) +
+    ylab("TSS Enrichment")
+  
+  
+  return(QC_tss_uFrag_plot)
+  
+}
+
+create_frag_size_plot <- function(ARCHR_OBJ) {
+  
+  #' Create archR fragment size plot for all samples in the dataset
+  #' 
+  #' @description 
+  #' 
+  #' @param ARCHR_OBJ: An ArchR object
+  #' 
+  #' @returns A fragment size plot for all samples
+  
+  message('Genreating fragment size plot')
+  
+  plot_df <- as_tibble(plotFragmentSizes(ARCHR_OBJ, returnDF = TRUE)) %>%
+    mutate(group = str_replace(group, 'GE_', ''))
+  
+  frags_plot <- ggplot(plot_df, aes(fragmentSize, fragmentPercent, 
+                      color = group)) + 
+    geom_line(size = 0.7) + 
+    theme_ArchR() + 
+    xlab("ATAC-seq Fragment Size (bp)") + ylab("Percentage of Fragments") + 
+    scale_color_manual(values = c("#0073C2FF", "#EFC000FF", "#FF6347")) + 
+    scale_y_continuous(limits = c(0, max(plot_df$fragmentPercent) * 1.05), expand = c(0, 0)) + 
+    scale_x_continuous(limits = c(min(plot_df$fragmentSize), 
+                                  max(plot_df$fragmentSize)), expand = c(0, 0)) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+          # panel.grid.major = element_blank(), 
+          # panel.grid.minor = element_blank(),
+          panel.border = element_rect(colour = "black", size = 0.8),
+          plot.title = element_text(hjust = 0.5, face = 'bold', size = 16),
+          axis.title.x = element_text(colour = "#000000", size = 13, vjust = -0.5),
+          axis.title.y = element_text(colour = "#000000", size = 13),
+          axis.text.x  = element_text(colour = "#000000", size = 13),
+          axis.text.y  = element_text(colour = "#000000", size = 13),
+          legend.text = element_text(size = 12),
+          legend.title = element_blank(),
+          legend.position = c(.8, .8))
+  
+  return(frags_plot)
+  
+}
+
+create_tss_plot <- function(ARCHR_OBJ, PALETTE = NULL) {
+  
+  #' Create archR TSS plot for all samples in the dataset
+  #' 
+  #' @description 
+  #' 
+  #' @param ARCHR_OBJ: An ArchR object
+  #' 
+  #' @returns A TSS plot for all samples
+  #' 
+  
+  plot_df <- as_tibble(plotTSSEnrichment(archR_50, returnDF = TRUE)) %>%
+    mutate(group = str_replace(group, 'GE_', ''))
+  
+  tss_plot <- ggplot(plot_df, aes(x, smoothValue, color = group)) + geom_line(size = 1) + 
+    theme_ArchR() + xlab("Distance From Center (bp)") + 
+    ylab("Normalized Insertion Profile") + 
+    scale_color_manual(values = c("#0073C2FF", "#EFC000FF", "#FF6347")) + 
+    scale_y_continuous(limits = c(0, max(plot_df$smoothValue) * 
+                                    1.05), expand = c(0, 0)) + 
+    scale_x_continuous(limits = c(min(plot_df$x), max(plot_df$x)), expand = c(0, 0)) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+          # panel.grid.major = element_blank(), 
+          # panel.grid.minor = element_blank(),
+          panel.border = element_rect(colour = "black", size = 0.8),
+          plot.title = element_text(hjust = 0.5, face = 'bold', size = 16),
+          axis.title.x = element_text(colour = "#000000", size = 13, vjust = -0.5),
+          axis.title.y = element_text(colour = "#000000", size = 13),
+          axis.text.x  = element_text(colour = "#000000", size = 13),
+          axis.text.y  = element_text(colour = "#000000", size = 13),
+          legend.text = element_text(size = 12),
+          legend.title = element_blank(),
+          legend.position = c(.8, .8)) 
+  
+  return(tss_plot)
+  
+}
+
+
 create_umap_batch_plots <- function(
     
     ARCHR_ID = NULL, 
