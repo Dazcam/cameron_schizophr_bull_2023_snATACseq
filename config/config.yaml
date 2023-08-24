@@ -29,15 +29,11 @@ SLDSR_CELL_TYPES:
 GENE_WINDOW:
     100UP_100DOWN:
     
-ZIFFRA_CELL_TYPES:
-    dlEN_ziffra_macs2peaks:
-    earlyEN_ziffra_macs2peaks:
-    ulEN_ziffra_macs2peaks:
-
 COND_CELL_TYPES:
     dlEN_ziffra_macs2peaks:
     earlyEN_ziffra_macs2peaks:
     ulEN_ziffra_macs2peaks:
+    union_neurons:
 
 LDSR_GWAS:
     SCZ:
