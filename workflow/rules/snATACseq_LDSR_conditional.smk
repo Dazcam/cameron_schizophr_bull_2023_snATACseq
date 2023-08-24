@@ -106,7 +106,7 @@ rule ldsr_cond_stratified_summary:
     shell:
              """
              
-             head -1 {params.dir}snATACseq.CGE_vs_dlEN_CONDITIONAL_macs2peaks.SCZ_baseline.v1.2.results > {output}
+             head -1 {params.dir}snATACseq.CGE_vs_dlEN_ziffra_macs2peaks.SCZ_baseline.v1.2.results > {output}
              File={params.cell_types}
              Lines=$(cat $File)
              for Line in $Lines

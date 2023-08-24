@@ -12,8 +12,8 @@ results/03SIGNAC/
 results/04FRAGMENT_FILES/
 workflow/.DS_Store
 workflow/scripts/.DS_Store
-results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/*.results
-results/06LDSR/ZIFFRA_PEAKS/part_herit/baseline_v1.2/*.log
+results/06LDSR/CONDITIONAL_PEAKS/part_herit/baseline_v1.2/*.results
+results/06LDSR/CONDITIONAL_PEAKS/part_herit/baseline_v1.2/*.log
 results/06LDSR/part_herit/baseline_v1.2/*.results
 results/06LDSR/part_herit/baseline_v1.2/*.log 
 results/06LDSR/annotation_files/
