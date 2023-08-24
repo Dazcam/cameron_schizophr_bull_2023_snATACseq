@@ -25,7 +25,7 @@ options(scipen = 999) # required to prevent peak coords. being abbr. in sci' not
 peak_list <- read_excel(paste0(ZIFFRA_DIR, 'Ziffra_2021_supp_tables_2_13.xlsx'), sheet = 'ST2 AllPrimaryPeaks') %>%
   dplyr::select(seqnames, start, end, peak_name) 
 macs2_peak_list <- read_excel(paste0(ZIFFRA_DIR, 'Ziffra_2021_supp_tables_2_13.xlsx'), sheet = 'ST3 MACSpeaks_byCelltype') 
-specific_peak_list <- read_excel(paste0(ZIFFRA_DIR, 'Ziffra_2021_supp_tables_2_13.xlsx'), sheet = 'ST4 Specificpeaks_byCelltype') 
+#specific_peak_list <- read_excel(paste0(ZIFFRA_DIR, 'Ziffra_2021_supp_tables_2_13.xlsx'), sheet = 'ST4 Specificpeaks_byCelltype') 
 
 
 ## Set up pairwise comparison df  -----------------------------------------------------
@@ -47,25 +47,24 @@ ziffra_peaks_all <- macs2_peak_list %>%
   relocate(seqnames, start, end, peak_name) %>%
   rename(chr = seqnames)  %>%
   rename_with(~str_remove(., '_MACSpeaks')) %>%
+  select(chr, start, end, peak_name, dlEN, earlyEN, ulEN) %>%
   gather(cell_type, val, -peak_name, -chr, -start, -end) %>%
   filter(val == 1) %>%
-  mutate(start = ifelse(start - 100000 < 0, 0, start - 100000), end = end + 100000) %>%
   group_split(cell_type) %>%
   purrr::set_names(purrr::map_chr(., ~.x$cell_type[1])) %>%
-  purrr::imap(~write_tsv(.x[,1:4], paste0(PEAK_DIR,  .y, '_ziffra_macs2peaks_100UP_100DOWN.bed'), 
-                                   col_names = FALSE))
+  purrr::imap(~write_tsv(.x[,1:4], paste0(PEAK_DIR,  .y, '_ziffra_macs2peaks.bed'), 
+                                   col_names = FALSE)) 
 
-ziffra_peaks_specific <- specific_peak_list %>% 
-  inner_join(peak_list) %>%
-  relocate(seqnames, start, end, peak_name) %>%
-  rename_with(~str_remove(., '_Specificpeaks')) %>%
-  gather(cell_type, val, -peak_name, -seqnames, -start, -end) %>%
-  filter(val == 1) %>%
-  mutate(start = ifelse(start - 100000 < 0, 0, start - 100000), end = end + 100000) %>%
-  group_split(cell_type) %>%
-  purrr::set_names(purrr::map_chr(., ~.x$cell_type[1])) %>%
-  purrr::imap(~write_tsv(.x[,1:4], paste0(PEAK_DIR,  .y, '_ziffra_specificpeaks_100UP_100DOWN.bed'), 
-                         col_names = FALSE))
+# ziffra_peaks_specific <- specific_peak_list %>% 
+#   inner_join(peak_list) %>%
+#   relocate(seqnames, start, end, peak_name) %>%
+#   rename_with(~str_remove(., '_Specificpeaks')) %>%
+#   gather(cell_type, val, -peak_name, -seqnames, -start, -end) %>%
+#   filter(val == 1) %>%
+#   group_split(cell_type) %>%
+#   purrr::set_names(purrr::map_chr(., ~.x$cell_type[1])) %>%
+#   purrr::imap(~write_tsv(.x[,1:4], paste0(PEAK_DIR,  .y, '_ziffra_specificpeaks_100UP_100DOWN.bed'), 
+#                          col_names = FALSE))
 
 
 #--------------------------------------------------------------------------------------
