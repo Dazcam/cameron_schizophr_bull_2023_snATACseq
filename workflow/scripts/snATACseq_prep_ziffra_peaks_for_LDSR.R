@@ -15,7 +15,7 @@ library(tidyverse)
 ##  Define global variables  -----------------------------------------------------------
 cat('\nDefining variables ... \n')
 ZIFFRA_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/resources/public_datasets/ziffra_2021/"
-PEAK_DIR <-  "~/Desktop/fetal_brain_snATACseq_V3_010323/results/05PEAKS/ZIFFRA_PEAKS/"
+PEAK_DIR <-  "~/Desktop/fetal_brain_snATACseq_V3_010323/results/05PEAKS/CONDITIONAL_PEAKS/"
 dir.create(PEAK_DIR)
 
 ##  Load public data  -----------------------------------------------------------------
