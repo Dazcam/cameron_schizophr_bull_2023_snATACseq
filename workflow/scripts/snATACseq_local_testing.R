@@ -255,7 +255,7 @@ for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
                          names=c(rep(".", length(PEAKS))),
                          scores=c(rep(".", length(PEAKS))),
                          strands=strand(PEAKS))) %>%
-    write_tsv(file = paste0(PEAKS_DIR, CELL_TYPE, '.hg38.ext250bp.bed'))
+    write_tsv(file = paste0(PEAKS_DIR, CELL_TYPE, '.hg38.ext250bp.bed'), col_names = FALSE)
   
   # Assign Granges object 
   assign(paste0(CELL_TYPE, '_peaks'), PEAKS)
@@ -295,7 +295,7 @@ if (get_neuronal_union_peaks) {
                          names = c(rep(".", length(union_peaks_Ns))),
                          scores = c(rep(".", length(union_peaks_Ns))),
                          strands = strand(union_peaks_Ns))) %>%
-    write_tsv(file = paste0(PEAKS_DIR, 'union_neurons.hg38.ext250bp.bed'))
+    write_tsv(file = paste0(PEAKS_DIR, 'union_neurons.hg38.ext250bp.bed'), col_names = FALSE)
 
   
 }
