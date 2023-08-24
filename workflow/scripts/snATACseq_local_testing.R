@@ -83,7 +83,6 @@ MACS_PATH <- "/Users/darren/opt/miniconda3/envs/p2_macs/bin/macs2"
 reticulate::use_condaenv(ENV_PATH) 
 run_peak_calling()
 
-
 ## ArchR to Signac  -------------------------------------------------------------------
 # To save hassle match archR$Sample IDs to the Cellranger sample out files
 seurat_atac <- run_archR2Signac(archR_pks_Clusters, FRAGS_DIR)
@@ -249,24 +248,55 @@ for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
     
   }
   
-  # Convert to bed file
-  PEAKS_DF <- data.frame(seqnames=seqnames(PEAKS),
+  # Convert and write bed file 
+  PEAKS_DF <- tibble(data.frame(seqnames=seqnames(PEAKS),
                          starts=start(PEAKS)-1,
                          ends=end(PEAKS),
                          names=c(rep(".", length(PEAKS))),
                          scores=c(rep(".", length(PEAKS))),
-                         strands=strand(PEAKS))
-  
-  # Write df to bed file - https://www.biostars.org/p/89341/ 
-  write.table(PEAKS_DF, 
-              file=paste0(PEAKS_DIR, CELL_TYPE, '.hg38.ext250bp.bed'),
-              quote=F, 
-              sep="\t", 
-              row.names=F, 
-              col.names=F)
+                         strands=strand(PEAKS))) %>%
+    write_tsv(file = paste0(PEAKS_DIR, CELL_TYPE, '.hg38.ext250bp.bed'))
   
   # Assign Granges object 
   assign(paste0(CELL_TYPE, '_peaks'), PEAKS)
+  
+}
+
+# Create union peak set for Neuronal cells only - see here: https://github.com/GreenleafLab/ArchR/discussions/2007
+# Note that this will replace the union peak set stored in ArchR object if saved
+get_neuronal_union_peaks <- FALSE
+union_peaks <- getPeakSet(archR_50)
+if (get_neuronal_union_peaks) {
+  
+  # Create and load separate ArchR project to make sure main project peak / union files are not overwritten
+  saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union'), dropCells = TRUE)  
+  archR_50_N_union <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union')) 
+  
+  # Set progenitor to NA to consider only Neuronal cell types for union
+  archR_50_N_union$neurons_only <- str_replace(archR_50_N_union$Clusters_pred, "Progenitor", NA_character_)
+  
+  # Add coverages
+  archR_50_N_union <- addGroupCoverages(ArchRProj = archR_50_N_union, groupBy = 'neurons_only', force = TRUE)
+  
+  # Call peaks
+  archR_50_N_union <- addReproduciblePeakSet(
+    ArchRProj = archR_50_N_union, 
+    groupBy = 'neurons_only', 
+    pathToMacs2 = MACS_PATH,
+    cutOff = 0.05, 
+    extendSummits = 250)
+  
+  union_peaks_Ns <- getPeakSet(archR_50_N_union)
+  
+  # Convert and write bed file 
+  union_peaks_Ns_df <- tibble(data.frame(seqnames = seqnames(union_peaks_Ns),
+                         starts = start(union_peaks_Ns)-1,
+                         ends = end(union_peaks_Ns),
+                         names = c(rep(".", length(union_peaks_Ns))),
+                         scores = c(rep(".", length(union_peaks_Ns))),
+                         strands = strand(union_peaks_Ns))) %>%
+    write_tsv(file = paste0(PEAKS_DIR, 'union_neurons.hg38.ext250bp.bed'))
+
   
 }
 
