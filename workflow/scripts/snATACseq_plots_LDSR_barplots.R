@@ -27,8 +27,9 @@ for (GWAS in GWASs) {
 
 ldsr_grp_df <- rbind(SCZ_ldsr, HEIGHT_ldsr) %>%
   mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
-  separate_wider_delim(Category, '.', names = c('cell_type', 'suffix')) %>%
-  select(-suffix) %>%
+##  separate_wider_delim(Category, '.', names = c('cell_type', 'suffix')) %>%
+#  select(-suffix) %>%
+  rename(cell_type = Category) %>%
   dplyr::mutate(across(c('cell_type'), str_replace, 'progenitor', 'Progenitor')) %>%
   mutate(across('cell_type', str_replace, 'GE', 'GE-N'))
 
@@ -87,14 +88,13 @@ for (GWAS in GWASs) {
 ldsr_grp_cond_df <- rbind(SCZ_ldsr_cond, HEIGHT_ldsr_cond) %>%
   mutate(LDSR = if_else(`Coefficient_z-score` > 0, -log10(pnorm(`Coefficient_z-score`, lower.tail = FALSE)), 0)) %>%
   separate_wider_delim(Category, '_ziffra_', names = c('cell_type', 'suffix')) %>%
-  mutate(first_letter = substr(suffix, 1, 1)) %>%
-  mutate(cell_type = paste(cell_type, first_letter, sep = '_')) %>%
+  select(-suffix) %>%
   dplyr::mutate(across(c('cell_type'), str_replace, 'progenitor', 'Progenitor')) %>%
   mutate(across('cell_type', str_replace, 'GE', 'GE-N')) %>%
   mutate(across('cell_type', str_replace_all, '_', '-')) %>%
   filter(GWAS == 'SCZ') %>%
-  mutate(across('cell_type', str_replace, '-m', '-macs2')) %>%
-  mutate(across('cell_type', str_replace, '-s', '-spec'))
+  mutate(across('cell_type', str_replace, '-m', '')) %>%
+  mutate(across('cell_type', str_replace, '-vs-', ' vs. '))
 
   
 #  select(-suffix) %>%
@@ -104,7 +104,7 @@ ldsr_grp_cond_df <- rbind(SCZ_ldsr_cond, HEIGHT_ldsr_cond) %>%
 ldsr_cond_plot <- ggplot(data = ldsr_grp_cond_df, aes(x = LDSR, y = factor(cell_type, rev(levels(factor(cell_type)))), 
                                                         fill = cell_type)) +
   geom_bar(stat = "identity", color = 'black', position = "dodge") +
-  geom_vline(xintercept=-log10(0.05/24), linetype = "dashed", color = "black") +
+  geom_vline(xintercept=-log10(0.05/12), linetype = "dashed", color = "black") +
   geom_vline(xintercept=-log10(0.05), linetype = "dotted", color = "black") +
   theme_bw() +
   ggtitle('SCZ') +
@@ -121,10 +121,10 @@ ldsr_cond_plot <- ggplot(data = ldsr_grp_cond_df, aes(x = LDSR, y = factor(cell_
   xlab(expression(-log[10](P))) +
   ylab('Cell type') +
   xlim(0, 8) +
-  scale_fill_manual(values = c('#6098ab', '#6098ab', '#6098ab', '#6098ab', '#6098ab', '#6098ab',
-                               '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a', '#f18e2a',
-                               '#e1575a', '#e1575a', '#e1575a', '#e1575a', '#e1575a', '#e1575a',  
-                               '#58a14e', '#58a14e', '#58a14e', '#58a14e', '#58a14e', '#58a14e'))
+  scale_fill_manual(values = c('#6098ab', '#6098ab', '#6098ab',
+                               '#f18e2a', '#f18e2a', '#f18e2a', 
+                               '#e1575a', '#e1575a', '#e1575a',  
+                               '#58a14e', '#58a14e', '#58a14e'))
                     
                     
 
