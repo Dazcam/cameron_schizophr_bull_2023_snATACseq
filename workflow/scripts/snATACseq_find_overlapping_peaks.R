@@ -75,15 +75,15 @@ for (REGION in c('lge', 'cge', 'mge')) {
 # Find peak overlaps - 2-way
 for (REGION in c('lge', 'cge', 'mge')) {
   
-  PEAKS <- get(paste0(REGION, '_hg19_peaks'))
+  SHI_PEAKS <- get(paste0(REGION, '_hg19_peaks'))
   MSCOFF_PEAKS <- get(paste0(REGION, '_mscoff_peaks'))
   
-  OVERLAPS <- findOverlapsOfPeaks(PEAKS, MSCOFF_PEAKS, minoverlap = 100)
+  OVERLAPS <- findOverlapsOfPeaks(SHI_PEAKS, MSCOFF_PEAKS, minoverlap = 100)
   VENN <- makeVennDiagram(OVERLAPS, minoverlap = 100)
   VENN2 <- pairwise_venn(VENN, paste0(toupper(REGION), '-N'), 
                          paste0(toupper(REGION), '-Bulk')) 
   
-  UNIQUE_PEAKS <- OVERLAPS$peaklist$PEAKS
+  UNIQUE_PEAKS <- OVERLAPS$peaklist$SHI_PEAKS
   MSCOFF_UNIQ_PEAKS <- OVERLAPS$peaklist$MSCOFF_PEAKS
   
   assign(paste0(REGION, '_2way_overlaps'), OVERLAPS)
@@ -95,12 +95,16 @@ for (REGION in c('lge', 'cge', 'mge')) {
   
 }
 
-# Create bed for unique peaks # Issue here number in Venn and findOverlapsofPeaks
-# don't match
+
+# Create bed for unique peaks 
+dir.create(paste0(PEAKS_DIR, 'UNIQUE_PEAKS/'))
 for (region in c('lge', 'cge', 'mge')) {
   
-  bed_tbl <- valr::gr_to_bed(get(paste0(region, '_2way_uniq_peaks')))
-  assign(paste0(region, '_bed'), bed_tbl)
+  bed <- valr::gr_to_bed(OVERLAPS$uniquePeaks) %>%
+    mutate(names = names(OVERLAPS$uniquePeaks)) %>%
+    filter(str_detect(names, 'SHI_PEAKS')) %>%
+    dplyr::select(!names) %>%
+    write_tsv(paste0(PEAKS_DIR, 'UNIQUE_PEAKS/', toupper(region), '.vs.MSCOFF_unique_peaks.bed'))
   
 }
 
