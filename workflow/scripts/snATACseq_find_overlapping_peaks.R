@@ -53,7 +53,7 @@ for (REGION in c('LGE', 'MGE', 'CGE', 'progenitor')) {
 # Note that this was done on hg19!!!!
 mscoff_peaks <- readxl::read_excel(paste0(MSCOFF_DIR, 'markenscoff_2020_supp_table_2.xlsx'), 
                                    sheet = 'S2B') %>%
-  select(`OCR coordinates (hg19)`, overlaps_cge_peak, overlaps_lge_peak, overlaps_mge_peak) %>%
+  dplyr::select(`OCR coordinates (hg19)`, overlaps_cge_peak, overlaps_lge_peak, overlaps_mge_peak) %>%
   dplyr::rename('peaks' = 'OCR coordinates (hg19)') %>%
   separate(col = peaks, sep = ':', c("chr", "region")) %>%
   separate(col = region, sep = '-', c("start", "end")) 
@@ -64,7 +64,7 @@ for (REGION in c('lge', 'cge', 'mge')) {
   
   PEAKS <- mscoff_peaks %>%
     filter(get(paste0('overlaps_', REGION, '_peak')) == 1) %>%
-    select(chr, start, end) %>%
+    dplyr::select(chr, start, end) %>%
     toGRanges(format = "BED", header = FALSE) 
   
   assign(paste0(REGION, '_mscoff_peaks'), PEAKS)
@@ -100,12 +100,12 @@ for (REGION in c('lge', 'cge', 'mge')) {
 dir.create(paste0(PEAKS_DIR, 'UNIQUE_PEAKS/'))
 for (region in c('lge', 'cge', 'mge')) {
   
-  bed <- valr::gr_to_bed(OVERLAPS$uniquePeaks) %>%
-    mutate(names = names(OVERLAPS$uniquePeaks)) %>%
+  bed <- valr::gr_to_bed(get(paste0(region, '_2way_overlaps'))$uniquePeaks) %>%
+    mutate(names = names(get(paste0(region, '_2way_overlaps'))$uniquePeaks)) %>%
     filter(str_detect(names, 'SHI_PEAKS')) %>%
     dplyr::select(!names) %>%
-    write_tsv(paste0(PEAKS_DIR, 'UNIQUE_PEAKS/', toupper(region), '.vs.MSCOFF_unique_peaks.bed'))
-  
+    write_tsv(paste0(PEAKS_DIR, 'UNIQUE_PEAKS/', toupper(region), '.vs.MSCOFF_unique_peaks.hg19.ext250bp.bed'))
+    message('Region peak cnt: ', nrow(bed))
 }
 
 all.peaks <- OVERLAPS$all.peaks
