@@ -1360,7 +1360,7 @@ run_motif_analysis <- function(
   #' @description Run motif analysis on a granges object 
   #' 
   #' @param PEAKS_GR A Granges object containing peaks
-  #' @param GENOME A Bioconductor BSgenome object 
+  #' @param GENOME A string specifying genome build for BSgenome object
   #' @param TOP_N The number of motifs most significant motifs to plot  
   #' @param REGION The region the cells of interest come from
   #' 
@@ -1373,27 +1373,39 @@ run_motif_analysis <- function(
   library(JASPAR2020)
   library(TFBSTools)
   library(SummarizedExperiment)
-  library(BSgenome.Hsapiens.UCSC.hg19) # Need to add hg38 
   library(patchwork)
+  
+  if (GENOME == 'hg38') {
+    
+    genome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+    
+  } else {
+    
+    genome <- BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19
+  
+  }
+  
+  genome
   
   cat(paste0("\n\nObtaining motifs ... \n"))
   pwms <- getMatrixSet(JASPAR2020, opts = list(matrixtype = "PWM", species = 9606))
   
   # Get sequence for peakset
   cat(paste0("\n\nObtaining sequence info for peaks ... \n"))
-  SEQS <- Biostrings::getSeq(GENOME, PEAKS_GR)
+  SEQS <- Biostrings::getSeq(genome, PEAKS_GR)
   
   cat(paste0("\n\nCalculating motif enrichments ... \n"))
   MOTIF_OBJ <- calcBinnedMotifEnrR(seqs = SEQS,
                                    pwmL = pwms,
                                    background = "genome",
-                                   genome = GENOME,
+                                   genome = genome,
                                    genome.regions = NULL, # sample from full genome
                                    genome.oversample = 2, 
                                    BPPARAM = BiocParallel::SerialParam(RNGseed = 42),
                                    verbose = TRUE)
   
   cat(paste0("\n\nPulling out top", TOP_N, " most signifciant motifs ... \n"))
+  
   # Get lowest negLog10Padj for top30
   TOP_P_MIN <- as_tibble(assay(MOTIF_OBJ, "negLog10Padj")[, 1]) %>%
     arrange(desc(value)) %>%
@@ -1413,6 +1425,7 @@ run_motif_analysis <- function(
     left_join(motifs) %>% 
     select(!rowname) %>%
     arrange(desc(negLog10Padj))
+  assign(paste0(REGION, '_motifs_df'), MOTIF_DF, .GlobalEnv)
   
   cat(paste0("\n\nPlotting ... \n"))
   MOTIF_PLOT <- plotMotifHeatmaps(x = MOTIF_OBJ[MOTIF_SIG], 
@@ -1424,7 +1437,6 @@ run_motif_analysis <- function(
   FINAL_PLOT <- MOTIF_PLOT$labels + MOTIF_PLOT$log2enr + MOTIF_PLOT$negLog10Padj
   
   return(FINAL_PLOT)
-  assign(paste0(REGION, '_motifs_df'), MOTIF_DF, .GlobalEnv)
   
   cat(paste0("\n\nDone. \n"))
   

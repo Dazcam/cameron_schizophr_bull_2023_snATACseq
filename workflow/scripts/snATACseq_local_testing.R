@@ -54,8 +54,6 @@ archR <- loadArchRProject(paste0(ARCHR_DIR, 'GE'))
 cell_cnts <- as_tibble(table(archR$Sample), .name_repair = make.names) %>%
   dplyr::rename("Sample" = "X","cell_cnts_postQC" = "n")
 
-
-
 ##  Run Cluster analysis  -------------------------------------------------------------
 # run_cluster_analysis(ARCHR_ID = archR) - done on hawk
 create_archR_group_plot(archR, 'Clusters', 'UMAP')
@@ -249,12 +247,12 @@ for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
   }
   
   # Convert and write bed file 
-  PEAKS_DF <- tibble(data.frame(seqnames=seqnames(PEAKS),
-                         starts=start(PEAKS)-1,
-                         ends=end(PEAKS),
-                         names=c(rep(".", length(PEAKS))),
-                         scores=c(rep(".", length(PEAKS))),
-                         strands=strand(PEAKS))) %>%
+  PEAKS_DF <- tibble(data.frame(seqnames = seqnames(PEAKS),
+                                starts = start(PEAKS) - 1,
+                                ends = end(PEAKS),
+                                names = c(rep(".", length(PEAKS))),
+                                scores = c(rep(".", length(PEAKS))),
+                                strands = strand(PEAKS))) %>%
     write_tsv(file = paste0(PEAKS_DIR, CELL_TYPE, '.hg38.ext250bp.bed'), col_names = FALSE)
   
   # Assign Granges object 
@@ -262,88 +260,88 @@ for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
   
 }
 
-# Create union peak set for Neuronal cells only - see here: https://github.com/GreenleafLab/ArchR/discussions/2007
-# Note that this will replace the union peak set stored in ArchR object if saved
-get_neuronal_union_peaks <- FALSE
-union_peaks <- getPeakSet(archR_50)
-if (get_neuronal_union_peaks) {
-  
-  # Create and load separate ArchR project to make sure main project peak / union files are not overwritten
-  saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union'), dropCells = TRUE)  
-  archR_50_N_union <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union')) 
-  
-  # Set progenitor to NA to consider only Neuronal cell types for union
-  archR_50_N_union$neurons_only <- str_replace(archR_50_N_union$Clusters_pred, "Progenitor", NA_character_)
-  
-  # Add coverages
-  archR_50_N_union <- addGroupCoverages(ArchRProj = archR_50_N_union, groupBy = 'neurons_only', force = TRUE)
-  
-  # Call peaks
-  archR_50_N_union <- addReproduciblePeakSet(
-    ArchRProj = archR_50_N_union, 
-    groupBy = 'neurons_only', 
-    pathToMacs2 = MACS_PATH,
-    cutOff = 0.05, 
-    extendSummits = 250)
-  
-  union_peaks_Ns <- getPeakSet(archR_50_N_union)
-  
-  # Convert and write bed file 
-  union_peaks_Ns_df <- tibble(data.frame(seqnames = seqnames(union_peaks_Ns),
-                         starts = start(union_peaks_Ns)-1,
-                         ends = end(union_peaks_Ns),
-                         names = c(rep(".", length(union_peaks_Ns))),
-                         scores = c(rep(".", length(union_peaks_Ns))),
-                         strands = strand(union_peaks_Ns))) %>%
-    write_tsv(file = paste0(PEAKS_DIR, 'union_neurons.hg38.ext250bp.bed'), col_names = FALSE)
-
-  
-}
+# Create union peak set for neuronal cells only - see here: https://github.com/GreenleafLab/ArchR/discussions/2007
+# Note that this will replace the union peak set stored in ArchR object if not saved to new ArchR project
+# get_neuronal_union_peaks <- FALSE
+# union_peaks <- getPeakSet(archR_50)
+# if (get_neuronal_union_peaks) {
+#   
+#   # Create and load separate ArchR project to make sure main project peak / union files are not overwritten
+#   saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union'), dropCells = TRUE)  
+#   archR_50_N_union <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union')) 
+#   
+#   # Set progenitor to NA to consider only Neuronal cell types for union
+#   archR_50_N_union$neurons_only <- str_replace(archR_50_N_union$Clusters_pred, "Progenitor", NA_character_)
+#   
+#   # Add coverages
+#   archR_50_N_union <- addGroupCoverages(ArchRProj = archR_50_N_union, groupBy = 'neurons_only', force = TRUE)
+#   
+#   # Call peaks
+#   archR_50_N_union <- addReproduciblePeakSet(
+#     ArchRProj = archR_50_N_union, 
+#     groupBy = 'neurons_only', 
+#     pathToMacs2 = MACS_PATH,
+#     cutOff = 0.05, 
+#     extendSummits = 250)
+#   
+#   union_peaks_Ns <- getPeakSet(archR_50_N_union)
+#   
+#   # Convert and write bed file
+#   # Note omitted .hg38.ext250bp in file name for compatibility with the LDSR scripts
+#   union_peaks_Ns_df <- tibble(data.frame(seqnames = seqnames(union_peaks_Ns),
+#                                          starts = start(union_peaks_Ns) - 1,
+#                                          names = c(rep(".", length(union_peaks_Ns))),
+#                                          scores = c(rep(".", length(union_peaks_Ns))),
+#                                          strands = strand(union_peaks_Ns))) %>%
+#     write_tsv(file = paste0(PEAKS_DIR, 'union_neurons.bed'), col_names = FALSE)
+# 
+#   
+# }
 
 ## Motif enrichment   -----------------------------------------------------------------
-archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))  
-archR_50 <- addMotifAnnotations(ArchRProj = archR_50, motifSet = "cisbp", name = "Motif")
-markersPeaks <- getMarkerFeatures(
-  ArchRProj = archR_50, 
-  useMatrix = "PeakMatrix", 
-  groupBy = 'predicted.id',
-  bias = c("TSSEnrichment", "log10(nFrags)"),
-  testMethod = "wilcoxon")
-
-enrichMotifs <- peakAnnoEnrichment(
-  seMarker = markersPeaks,
-  ArchRProj = archR_50,
-  peakAnnotation = "Motif",
-  cutOff = "FDR <= 0.1 & Log2FC >= 0.5"
-)
-
-colnames(enrichMotifs) <- c(' CGE-N', ' LGE-N', ' MGE-N', ' Progenitor') # Add space to make plot look nice
-rownames(enrichMotifs) <- rownames(enrichMotifs) %>% str_extract(".*(?=\\_)") 
-rownames(enrichMotifs) <- paste0(" ", rownames(enrichMotifs)) # Add space to make plot look nice
-
-  
-heatmap_mat <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE, returnMatrix = T)
-heatmapEM <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE)
-heatmapEM <- Heatmap(heatmap_mat, name = "mat", col = paletteContinuous(set = "comet", n = 100),
-        show_column_dend = FALSE, show_row_dend = FALSE, rect_gp = gpar(col = "grey", lwd = 1),
-        heatmap_legend_param = list(title = NULL, legend_direction = "horizontal", 
-                                    labels_gp = gpar(fontsize = 16),
-                                    grid_height = unit(1, "cm"), 
-                                    grid_width = unit(5, "mm")), 
-        column_names_side = c("top"), row_names_gp = gpar(fontsize = 18))
-ComplexHeatmap::draw(heatmapEM, 
-                     heatmap_legend_side = "bot", 
-                     annotation_legend_side = "bot")
-         
+# archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))  
+# archR_50 <- addMotifAnnotations(ArchRProj = archR_50, motifSet = "cisbp", name = "Motif")
+# markersPeaks <- getMarkerFeatures(
+#   ArchRProj = archR_50, 
+#   useMatrix = "PeakMatrix", 
+#   groupBy = 'predicted.id',
+#   bias = c("TSSEnrichment", "log10(nFrags)"),
+#   testMethod = "wilcoxon")
+# 
+# enrichMotifs <- peakAnnoEnrichment(
+#   seMarker = markersPeaks,
+#   ArchRProj = archR_50,
+#   peakAnnotation = "Motif",
+#   cutOff = "FDR <= 0.1 & Log2FC >= 0.5"
+# )
+# 
+# colnames(enrichMotifs) <- c(' CGE-N', ' LGE-N', ' MGE-N', ' Progenitor') # Add space to make plot look nice
+# rownames(enrichMotifs) <- rownames(enrichMotifs) %>% str_extract(".*(?=\\_)") 
+# rownames(enrichMotifs) <- paste0(" ", rownames(enrichMotifs)) # Add space to make plot look nice
+# 
+#   
+# heatmap_mat <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE, returnMatrix = T)
+# heatmapEM <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE)
+# heatmapEM <- Heatmap(heatmap_mat, name = "mat", col = paletteContinuous(set = "comet", n = 100),
+#         show_column_dend = FALSE, show_row_dend = FALSE, rect_gp = gpar(col = "grey", lwd = 1),
+#         heatmap_legend_param = list(title = NULL, legend_direction = "horizontal", 
+#                                     labels_gp = gpar(fontsize = 16),
+#                                     grid_height = unit(1, "cm"), 
+#                                     grid_width = unit(5, "mm")), 
+#         column_names_side = c("top"), row_names_gp = gpar(fontsize = 18))
+# ComplexHeatmap::draw(heatmapEM, 
+#                      heatmap_legend_side = "bot", 
+#                      annotation_legend_side = "bot")
+#          
 
 
 ## Peak coaccessibility  --------------------------------------------------------------
 archR_50 <- run_peak_coaccesibility(archR_50, PEAKS_DIR)
 
 track_plot <- plotBrowserTrack(
-  ArchRProj = archR_50, 
-  groupBy = "predicted.id", 
-  geneSymbol = 'DLX1', 
+  ArchRProj = archR_50,
+  groupBy = "predicted.id",
+  geneSymbol = 'DLX1',
   upstream = 50000,
   downstream = 50000,
   loops = getCoAccessibility(archR_50)
@@ -355,16 +353,16 @@ grid::grid.draw(track_plot$DLX1)
 
 plot_UMAPs_by_marker_genes(archR_50, 'UMAP', MARKER_GENES)
 
-# Save 
-saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)  
+# Save
+saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)
 
 save.image(file = '~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')
 load('~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')
 
 ##  Create markdown html  -------------------------------------------------------------
-render(paste0(SCRIPT_DIR, 'snATACseq_local_testing.Rmd'),
-       output_file = paste0('snATACseq_local_testing.html'),
-       output_dir = paste0(RESULTS_DIR, '03MARKDOWN'))
+# render(paste0(SCRIPT_DIR, 'snATACseq_local_testing.Rmd'),
+#        output_file = paste0('snATACseq_local_testing.html'),
+#        output_dir = paste0(RESULTS_DIR, '03MARKDOWN'))
        
 
 #--------------------------------------------------------------------------------------

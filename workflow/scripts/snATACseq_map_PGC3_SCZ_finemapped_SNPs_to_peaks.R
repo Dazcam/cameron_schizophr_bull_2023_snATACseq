@@ -11,7 +11,7 @@
 # 2. Map SNPs to hg38 using BioMart
 # 3. Check for overlap of PGC3 SCZ finemapped SNPs in snATACseq peaks (250 bp ext)
 # 4. Create binary df for whether SNP is in/not in peak for all cell types
-# 5. Run Wilcoxon rank sum test to test for difference in posterior probability means
+# 5. Run Wilcoxon rank sum test to test for difference in posterior probability meds
 #    between PGC3 SCZ SNPs in peaks v.s. rest of PGC3 SNPs not in peaks 
 
 # Need to re-annotate and add the 23 SNPs with wrong encoding in PGC3
