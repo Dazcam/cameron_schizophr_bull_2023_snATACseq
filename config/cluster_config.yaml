@@ -45,6 +45,14 @@ ldsr_stratified_baseline_v12:
 partitioned_heritability_conditional:
     num_cores: 1
     total_mem: 20G
-
+LDSR_unique__make_annot:
+    num_cores: 1
+    total_mem: 10G
+LDSR_unique_ld_scores:
+    num_cores: 1
+    total_mem: 10G
+LDSR_unique_stratified_baseline_v12:
+    num_cores: 1
+    total_mem: 20G
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------

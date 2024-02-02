@@ -26,6 +26,11 @@ SLDSR_CELL_TYPES:
     MGE:
     progenitor:
 
+UNIQUE_CELL_TYPES:
+    CGE:
+    LGE:
+    MGE:
+
 GENE_WINDOW:
     100UP_100DOWN:
     
