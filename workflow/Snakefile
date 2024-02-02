@@ -1,9 +1,9 @@
 configfile: '../config/config.yaml'
 
-include: "rules/snATACseq_cellRanger.smk"
-include: "rules/snATACseq_archR_processing.smk"
-include: "rules/snATACseq_LDSR.smk"
-include: "rules/snATACseq_LDSR_conditional.smk"
+#include: "rules/snATACseq_cellRanger.smk"
+#include: "rules/snATACseq_archR_processing.smk"
+#include: "rules/snATACseq_LDSR.smk"
+#include: "rules/snATACseq_LDSR_conditional.smk"
 include: "rules/snATACseq_LDSR_unique.smk"
 
 localrules: ldsr_get_lift_over_files, ldsr_stratified_summary

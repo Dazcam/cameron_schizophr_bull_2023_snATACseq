@@ -90,7 +90,7 @@ rule ldsr_ld_scores:
 
 
 rule ldsr_stratified_baseline_v12:
-    input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_ldsc_ready.sumstats.gz",
+    input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_LDSR_ready.sumstats.gz",
              LDSR = expand("../results/06LDSR/annotation_files/snATACseq.{CELL_TYPE}.{CHR}.l2.ldscore.gz", CELL_TYPE = config["CELL_TYPES"], CHR = range(1,23))
     output:  "../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}.{GWAS}_baseline.v1.2.results"
     conda:   "../envs/ldsr.yml"

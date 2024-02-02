@@ -75,7 +75,7 @@ rule ldsr_cond_ld_scores:
 
 rule ldsr_cond_stratified_baseline_v12:
     # Needs to be run after standard, non-conditional analyses - note we have union and CONDITIONAL peaks in model
-    input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_ldsc_ready.sumstats.gz",
+    input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_LDSR_ready.sumstats.gz",
              LDSR = expand("../results/06LDSR/annotation_files/snATACseq.{SLDSR_CELL_TYPE}.{CHR}.l2.ldscore.gz", SLDSR_CELL_TYPE = config["SLDSR_CELL_TYPES"], CHR = range(1,23)),
              COND = expand("../results/06LDSR/CONDITIONAL_PEAKS/annotation_files/snATACseq.{COND_CELL_TYPE}.{CHR}.l2.ldscore.gz", COND_CELL_TYPE = config["COND_CELL_TYPES"], CHR = range(1,23)),
              UNION = expand("../results/06LDSR/annotation_files/snATACseq.union.{CHR}.l2.ldscore.gz", CHR = range(1,23))   

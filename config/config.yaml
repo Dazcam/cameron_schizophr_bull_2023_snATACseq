@@ -42,7 +42,7 @@ COND_CELL_TYPES:
 
 LDSR_GWAS:
     SCZ:
-    HEIGHT:
+#    HEIGHT:
 
 LDSR_CONDITIONS: '../resources/sheets/LDSR_conditions.tsv'
 
