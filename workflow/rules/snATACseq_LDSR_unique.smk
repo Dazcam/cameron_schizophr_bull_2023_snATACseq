@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------
 #
 #
-#    Script for running SLDSC on snATAC-seq data unique SHi peaks
+#    Script for running SLDSC on snATAC-seq data unique GE peaks
 #
 #
 # -------------------------------------------------------------------------------------
@@ -60,28 +60,29 @@ rule LDSR_unique_ld_scores:
 
 
 rule LDSR_unique_stratified_baseline_v12:
-    input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_ldsc_ready.sumstats.gz",
+    input:   GWAS = "../results/06LDSR/GWAS_for_LDSR/{GWAS}_hg19_LDSR_ready.sumstats.gz",
              LDSR = expand("../results/06LDSR/annotation_files/unique_peaks/snATACseq.{CELL_TYPE}.vs.MSCOFF_unique_peaks.{CHR}.l2.ldscore.gz", CELL_TYPE = config["UNIQUE_CELL_TYPES"], CHR = range(1,23))
-    output:  "../results/06LDSR/part_herit/baseline_v1.2/unique_peaks/snATACseq.{CELL_TYPE}.{GWAS}_baseline.v1.2.results"
+    output:  "../results/06LDSR/unique_peaks/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GWAS}_baseline.v1.2.results"
     conda:   "../envs/ldsr.yml"
     params:  weights = "../resources/ldsr/reference_files/weights_hm3_no_hla/weights.",
              baseline = "../resources/ldsr/reference_files/baseline_v1.2_1000G_Phase3/baseline.",
              frqfile = "../resources/ldsr/reference_files/1000G_Phase3_frq/1000G.EUR.QC.",
              LD_anns = "../results/06LDSR/annotation_files/unique_peaks/snATACseq.{CELL_TYPE}.vs.MSCOFF_unique_peaks.",
-             out_file = "../results/06LDSR/part_herit/baseline_v1.2/unique_peaks/snATACseq.{CELL_TYPE}.{GWAS}_baseline.v1.2"
+             union_anns = "../results/06LDSR/annotation_files/snATACseq.union.",
+             out_file = "../results/06LDSR/unique_peaks/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GWAS}_baseline.v1.2"
     message: "Running Prt Hrt with {wildcards.CELL_TYPE}.vs.MSCOFF_unique_peaks and {wildcards.GWAS} GWAS"
     log:     "../results/00LOGS/06LDSR/unique_peaks/snATACseq.{CELL_TYPE}.{GWAS}.baseline.v1.2_partHerit.log"
     shell:
              "python ../resources/ldsr/ldsc.py --h2 {input.GWAS} --w-ld-chr {params.weights} "
-             "--ref-ld-chr {params.baseline},{params.LD_anns} --overlap-annot "
+             "--ref-ld-chr {params.baseline},{params.union_anns},{params.LD_anns} --overlap-annot "
              "--frqfile-chr {params.frqfile} --out {params.out_file} --print-coefficients 2> {log}"
 
 rule LDSR_unique_stratified_summary:
     # Careful here: L2_1 if no covariates, L2_2 if one covariate last number increasing for each additional covariate
-    input:   expand("../results/06LDSR/part_herit/baseline_v1.2/unique_peaks/snATACseq.{CELL_TYPE}.{GWAS}_baseline.v1.2.results", CELL_TYPE = config["UNIQUE_CELL_TYPES"], GWAS = config["LDSR_GWAS"])
-    output:  "../results/06LDSR/part_herit/baseline_v1.2/unique_peaks/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv"
+    input:   expand("../results/06LDSR/unique_peaks/part_herit/baseline_v1.2/snATACseq.{CELL_TYPE}.{GWAS}_baseline.v1.2.results", CELL_TYPE = config["UNIQUE_CELL_TYPES"], GWAS = config["LDSR_GWAS"])
+    output:  "../results/06LDSR/unique_peaks/part_herit/baseline_v1.2/snATACseq_LDSR_{GWAS}_baseline.v1.2_summary.tsv"
     message: "Creating summary file for {wildcards.GWAS} GWAS"
-    params:  dir = "../results/06LDSR/part_herit/baseline_v1.2/unique_peaks/",
+    params:  dir = "../results/06LDSR/unique_peaks/part_herit/baseline_v1.2/",
              cell_types = "../resources/sheets/GE_celltypes_unique.tsv"
     log:     "../results/00LOGS/06LDSR/unique_peaks/snRNAseq.{GWAS}_baseline.v1.2_partHerit.summary.log"
     shell:

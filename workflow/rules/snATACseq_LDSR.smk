@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------
 #
 #
-#    Script for running SLDSC on snATAC-seq data
+#    Script for running SLDSR on snATAC-seq data
 #
 #
 # -------------------------------------------------------------------------------------
@@ -98,13 +98,13 @@ rule ldsr_stratified_baseline_v12:
              baseline = "../resources/ldsr/reference_files/baseline_v1.2_1000G_Phase3/baseline.",
              frqfile = "../resources/ldsr/reference_files/1000G_Phase3_frq/1000G.EUR.QC.",
              LD_anns = "../results/06LDSR/annotation_files/snATACseq.{SLDSR_CELL_TYPE}.",
-             cond_anns = "../results/06LDSR/annotation_files/snATACseq.union.",
+             union_anns = "../results/06LDSR/annotation_files/snATACseq.union.",
              out_file = "../results/06LDSR/part_herit/baseline_v1.2/snATACseq.{SLDSR_CELL_TYPE}.{GWAS}_baseline.v1.2"
     message: "Running Prt Hrt with {wildcards.SLDSR_CELL_TYPE} and {wildcards.GWAS} GWAS"
     log:     "../results/00LOGS/06LDSR/snATACseq.{SLDSR_CELL_TYPE}.{GWAS}.baseline.v1.2_partHerit.log"
     shell:
              "python ../resources/ldsr/ldsc.py --h2 {input.GWAS} --w-ld-chr {params.weights} "
-             "--ref-ld-chr {params.baseline},{params.cond_anns},{params.LD_anns} --overlap-annot "
+             "--ref-ld-chr {params.baseline},{params.union_anns},{params.LD_anns} --overlap-annot "
              "--frqfile-chr {params.frqfile} --out {params.out_file} --print-coefficients 2> {log}"
 
 rule ldsr_stratified_summary:

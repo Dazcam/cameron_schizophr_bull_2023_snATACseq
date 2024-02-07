@@ -20,5 +20,5 @@ results/06LDSR/annotation_files/
 results/06LDSR/ZIFFRA_PEAKS/annotation_files/
 results/06LDSR/part_herit/baseline_v1.2/*baseline.v1.2.log
 results/00LOGS/
-results/06LDSR/part_herit/baseline_v1.2/unique_peaks/*
+results/06LDSR/unique_peaks/part_herit/baseline_v1.2/*
 results/06LDSR/CONDITIONAL_PEAKS/annotation_files/*

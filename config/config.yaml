@@ -43,6 +43,10 @@ COND_CELL_TYPES:
 LDSR_GWAS:
     SCZ:
 #    HEIGHT:
+    ASD:
+    ADHD:
+    MDD:
+    BPD:
 
 LDSR_CONDITIONS: '../resources/sheets/LDSR_conditions.tsv'
 
