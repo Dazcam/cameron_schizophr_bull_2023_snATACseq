@@ -1,8 +1,10 @@
 #--------------------------------------------------------------------------------------
 #
-#    ArchR - Local testing
+#    ArchR - Run ArchR pipeline
 #
 #--------------------------------------------------------------------------------------
+
+#  Run ArchR pipeline locally
 
 ## Load packages  ---------------------------------------------------------------------
 if (!require("Require")) install.packages("Require")
@@ -18,6 +20,9 @@ RESULTS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/'
 ARCHR_DIR <- paste0(RESULTS_DIR, '02ARCHR/')
 FRAGS_DIR <- paste0(RESULTS_DIR, '04FRAGMENT_FILES/')
 PEAKS_DIR <- paste0(RESULTS_DIR, '05PEAKS/')
+ENV_PATH <- "/Users/darren/opt/miniconda3/envs/p2_macs"
+MACS_PATH <- "/Users/darren/opt/miniconda3/envs/p2_macs/bin/macs2"
+reticulate::use_condaenv(ENV_PATH) 
 
 REGION <- 'GE'
 SET_FILTER <- NULL
@@ -60,7 +65,6 @@ create_archR_group_plot(archR, 'Clusters', 'UMAP')
 group_plot_Clusters_raw <- group_plot_Clusters 
 plot_UMAPs_by_marker_genes(archR, 'UMAP', MARKER_GENES)
 
-
 ##  Run Harmony -----------------------------------------------------------------------
 if(RUN_HARMONY) {
   
@@ -76,9 +80,6 @@ if(RUN_HARMONY) {
 
 ##  Run peak calling   ----------------------------------------------------------------
 # Need a peak matrix before running archR to Signac
-ENV_PATH <- "/Users/darren/opt/miniconda3/envs/p2_macs"
-MACS_PATH <- "/Users/darren/opt/miniconda3/envs/p2_macs/bin/macs2"
-reticulate::use_condaenv(ENV_PATH) 
 run_peak_calling()
 
 ## ArchR to Signac  -------------------------------------------------------------------
@@ -89,7 +90,7 @@ seurat_atac <- run_archR2Signac(archR_pks_Clusters, FRAGS_DIR)
 signac_snRNAseq_integration(seurat_atac, 'Shi', 'seurat_atac', 'IterativeLSI')
 
 # Assess integration using integration prediction score  ------------------------------
-# Subset based on integration prediction score - Going with prediction.score.max >= 0.50
+# Subset based on integration prediction score 
 seurat_atac_50 <- subset(seurat_int_seurat_atac, prediction.score.max >= 0.50)
 seurat_atac_50 <- subset(x = seurat_atac_50, 
                          subset = predicted.id %in% c('LGE', 'MGE', 'CGE', 'progenitor'))
@@ -141,17 +142,7 @@ umap_pred_score <- FeaturePlot(
 umap_pred_score <- plot_grid(umap_archR, umap_pred_id, umap_pred_score, 
           umap50, umap60, umap75)
 
-
-# Check prediction score distributions
-hist(seurat_int_seurat_atac$prediction.score.max)
-seurat_meta <- seurat_int_seurat_atac[[]]
-seurat_meta %>%
-  dplyr::select(Clusters, prediction.score.max) %>%
-  group_by(Clusters) %>%
-  summarise(mean_score = mean(prediction.score.max), 
-            median_score = median(prediction.score.max))
-
-##  Subset ArchR object
+##  Subset ArchR object  ------
 # Note that ArchR has a # between sample and cell ID and Signac uses _
 for (SCORE in c('50')) {
   
@@ -192,7 +183,7 @@ for (SCORE in c('50')) {
   
 }
 
-# Run peak calling only archR subsets
+## Run peak calling only archR subsets  -----------------------------------------------
 for (SCORE in c('50')) {
   
   cat('\nRunning peaks on ArchR object: ArchR_', SCORE, '\n', sep = '')
@@ -227,11 +218,11 @@ for (SCORE in c('50')) {
   
 }
 
-# Need to save using dropCells here. See https://github.com/GreenleafLab/ArchR/issues/483
-# devtools::install_github("immunogenomics/presto") issue was caused by not having presto
+# Save using dropCells. See https://github.com/GreenleafLab/ArchR/issues/483
+# May need to install presto: devtools::install_github("immunogenomics/presto") 
 saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)  
 
-# Create bed files
+## Create bed files  ------------------------------------------------------------------
 for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
   
   if (CELL_TYPE == 'union') {
@@ -260,81 +251,7 @@ for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
   
 }
 
-# Create union peak set for neuronal cells only - see here: https://github.com/GreenleafLab/ArchR/discussions/2007
-# Note that this will replace the union peak set stored in ArchR object if not saved to new ArchR project
-# get_neuronal_union_peaks <- FALSE
-# union_peaks <- getPeakSet(archR_50)
-# if (get_neuronal_union_peaks) {
-#   
-#   # Create and load separate ArchR project to make sure main project peak / union files are not overwritten
-#   saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union'), dropCells = TRUE)  
-#   archR_50_N_union <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50_Nrn_union')) 
-#   
-#   # Set progenitor to NA to consider only Neuronal cell types for union
-#   archR_50_N_union$neurons_only <- str_replace(archR_50_N_union$Clusters_pred, "Progenitor", NA_character_)
-#   
-#   # Add coverages
-#   archR_50_N_union <- addGroupCoverages(ArchRProj = archR_50_N_union, groupBy = 'neurons_only', force = TRUE)
-#   
-#   # Call peaks
-#   archR_50_N_union <- addReproduciblePeakSet(
-#     ArchRProj = archR_50_N_union, 
-#     groupBy = 'neurons_only', 
-#     pathToMacs2 = MACS_PATH,
-#     cutOff = 0.05, 
-#     extendSummits = 250)
-#   
-#   union_peaks_Ns <- getPeakSet(archR_50_N_union)
-#   
-#   # Convert and write bed file
-#   # Note omitted .hg38.ext250bp in file name for compatibility with the LDSR scripts
-#   union_peaks_Ns_df <- tibble(data.frame(seqnames = seqnames(union_peaks_Ns),
-#                                          starts = start(union_peaks_Ns) - 1,
-#                                          names = c(rep(".", length(union_peaks_Ns))),
-#                                          scores = c(rep(".", length(union_peaks_Ns))),
-#                                          strands = strand(union_peaks_Ns))) %>%
-#     write_tsv(file = paste0(PEAKS_DIR, 'union_neurons.bed'), col_names = FALSE)
-# 
-#   
-# }
-
-## Motif enrichment   -----------------------------------------------------------------
-# archR_50 <- loadArchRProject(paste0(ARCHR_DIR, 'GE_pred_id_50'))  
-# archR_50 <- addMotifAnnotations(ArchRProj = archR_50, motifSet = "cisbp", name = "Motif")
-# markersPeaks <- getMarkerFeatures(
-#   ArchRProj = archR_50, 
-#   useMatrix = "PeakMatrix", 
-#   groupBy = 'predicted.id',
-#   bias = c("TSSEnrichment", "log10(nFrags)"),
-#   testMethod = "wilcoxon")
-# 
-# enrichMotifs <- peakAnnoEnrichment(
-#   seMarker = markersPeaks,
-#   ArchRProj = archR_50,
-#   peakAnnotation = "Motif",
-#   cutOff = "FDR <= 0.1 & Log2FC >= 0.5"
-# )
-# 
-# colnames(enrichMotifs) <- c(' CGE-N', ' LGE-N', ' MGE-N', ' Progenitor') # Add space to make plot look nice
-# rownames(enrichMotifs) <- rownames(enrichMotifs) %>% str_extract(".*(?=\\_)") 
-# rownames(enrichMotifs) <- paste0(" ", rownames(enrichMotifs)) # Add space to make plot look nice
-# 
-#   
-# heatmap_mat <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE, returnMatrix = T)
-# heatmapEM <- plotEnrichHeatmap(enrichMotifs, n = 10, transpose = TRUE)
-# heatmapEM <- Heatmap(heatmap_mat, name = "mat", col = paletteContinuous(set = "comet", n = 100),
-#         show_column_dend = FALSE, show_row_dend = FALSE, rect_gp = gpar(col = "grey", lwd = 1),
-#         heatmap_legend_param = list(title = NULL, legend_direction = "horizontal", 
-#                                     labels_gp = gpar(fontsize = 16),
-#                                     grid_height = unit(1, "cm"), 
-#                                     grid_width = unit(5, "mm")), 
-#         column_names_side = c("top"), row_names_gp = gpar(fontsize = 18))
-# ComplexHeatmap::draw(heatmapEM, 
-#                      heatmap_legend_side = "bot", 
-#                      annotation_legend_side = "bot")
-#          
-
-
+## Did we report this????? ####
 ## Peak coaccessibility  --------------------------------------------------------------
 archR_50 <- run_peak_coaccesibility(archR_50, PEAKS_DIR)
 
@@ -356,8 +273,7 @@ plot_UMAPs_by_marker_genes(archR_50, 'UMAP', MARKER_GENES)
 # Save
 saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)
 
-save.image(file = '~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')
-load('~/Desktop/fetal_brain_snATACseq_V3_010323/resources/R_obj/atac_workspace_50.RData')
+## Did we report this????? ####
 
 ##  Create markdown html  -------------------------------------------------------------
 # render(paste0(SCRIPT_DIR, 'snATACseq_local_testing.Rmd'),

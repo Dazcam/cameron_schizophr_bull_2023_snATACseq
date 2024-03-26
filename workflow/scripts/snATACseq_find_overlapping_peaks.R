@@ -19,19 +19,21 @@ library(rmarkdown)
 library(Seurat) # For no legend
 
 ##  Set variables  --------------------------------------------------------------------
-PUBLIC_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/resources/public_datasets/'
+ROOT_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/'
+RESULTS_DIR <- paste0(ROOT_DIR, 'results/')
+PUBLIC_DIR <- paste0(ROOT_DIR, 'resources/public_datasets/')
 MSCOFF_DIR <- paste0(PUBLIC_DIR, 'markenscoff_2020/')
-PEAKS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/05PEAKS/'
-SCRIPT_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/workflow/scripts/'
-RESULTS_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/'
-TABLE_DIR <- '~/Desktop/fetal_brain_snATACseq_V3_010323/results/07TABLES/'
+PEAKS_DIR <- paste0(RESULTS_DIR, '05PEAKS/')
+SCRIPT_DIR <- paste0(ROOT_DIR, 'workflow/scripts/')
+
+TABLE_DIR <- paste0(RESULTS, '07TABLES/')
 
 RUN_PEAK_MOTIFS <- FALSE
 RUN_UNIQUE_PEAK_MOTIFS <- FALSE
 RUN_MRKDN <- FALSE
 
 # Load functions
-source('~/Desktop/fetal_brain_snATACseq_V3_010323/workflow/scripts/snATACseq_functions.R')
+source(paste0(SCRIPT_DIR, 'snATACseq_functions.R'))
 
 # Load snATACseq peaks - hg19 and hg38
 for (REGION in c('LGE', 'MGE', 'CGE', 'progenitor')) {
@@ -96,7 +98,7 @@ for (REGION in c('lge', 'cge', 'mge')) {
 }
 
 
-# Create bed for unique peaks 
+## Create bed for unique peaks  -----------
 dir.create(paste0(PEAKS_DIR, 'UNIQUE_PEAKS/'))
 for (region in c('lge', 'cge', 'mge')) {
   

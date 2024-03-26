@@ -7,14 +7,11 @@
 ## Info  ------------------------------------------------------------------------------
 
 # 1. Download PGC3 SCZ GWAS fine mapped SNPs
-#    16 SNPs with 1:28690628_T_C encoding removed for now
 # 2. Map SNPs to hg38 using BioMart
 # 3. Check for overlap of PGC3 SCZ finemapped SNPs in snATACseq peaks (250 bp ext)
 # 4. Create binary df for whether SNP is in/not in peak for all cell types
 # 5. Run Wilcoxon rank sum test to test for difference in posterior probability meds
 #    between PGC3 SCZ SNPs in peaks v.s. rest of PGC3 SNPs not in peaks 
-
-# Need to re-annotate and add the 23 SNPs with wrong encoding in PGC3
 
 ##  Load Packages  --------------------------------------------------------------------
 library(readxl)
@@ -24,8 +21,10 @@ library(biomaRt)
 
 ##  Define global variables  -----------------------------------------------------------
 cat('\nDefining variables ... \n')
-IN_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/resources/public_datasets/trubestskoy_2022/2020-08-14908C-s11/"
-PEAK_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/results/05PEAKS/"
+ROOT_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/"
+PUBLIC_DIR <- paste0(ROOT_DIR, "resources/public_datasets/")
+IN_DIR <- paste0(PUBLIC_DIR, "trubestskoy_2022/2020-08-14908C-s11/")
+PEAK_DIR <- paste0(ROOT_DIR, "results/05PEAKS/")
 SNP_DIR <- paste0(PEAK_DIR, 'finemapped_SNPs/')
 PEAK_EXTENSION <- c('ext250bp')
 CELL_TYPES <- c("CGE", "LGE", "MGE", "Progenitor")
@@ -51,23 +50,6 @@ snps_norsID <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'),
    filter(grepl(':|_', rsid))
 
  cat(paste0(length(snps_norsID %>% pull), ' SNPs with no rsIDs.\n'))
-
-# # Get rsIDs for snps_norsID
-# ensembl <- useEnsembl("ENSEMBL_MART_SNP", dataset = "hsapiens_snp")
-# 
-# ## Create an example set of coordinates as a data frame
-# snps_coords <- snps_norsID %>%
-#   separate(rsid, c('Chr', 'Base'), sep = ':') %>%
-#   separate(Base, c('Start', 'Alleles'), sep = '_', extra = 'merge') %>%
-#   dplyr::select(-Alleles) %>%
-#   mutate(Stop = Start) %>%
-#   apply(1, paste, collapse = ":")
-# 
-# # Very slow some SNPs not found
-# snps_extra[,5] <- getBM(attributes = c('refsnp_id', 'chr_name', 'chrom_start', 'chrom_end', 'allele'),
-#                     filters = 'chromosomal_region', 
-#                     values = snps_coords[5], 
-#                     mart = ensembl)  
 
 ## Get hg38 base postions for rsIDs using biomaRt -------------------------------------
 ## ~15-40 mins per 50K SNPs - note sometimes crashes when BiomaRt in heavy use

@@ -26,8 +26,6 @@ library(clusterProfiler)
 library(Repitools) # Granges to df
 #library(diffloop) # Add/rm chr to granges seqlevels
 
-
-
 ##  Define global variables  -----------------------------------------------------------
 cat('\nDefining variables ... \n')
 PEAK_DIR <- "~/Desktop/fetal_brain_snATACseq_V3_010323/results/05PEAKS/"

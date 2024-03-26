@@ -45,7 +45,7 @@ for (GWAS in GWASs) {
   
 
   ldsr_grp_df_subset$cell_type <- factor(ldsr_grp_df_subset$cell_type, 
-                                  levels=c("CGE-N", "MGE-N", "LGE-N", "Progenitor"))
+                                  levels=c("CGE-N", "LGE-N", "MGE-N", "Progenitor"))
   
   LDSR_PLOT <- ggplot(data = ldsr_grp_df_subset, aes(x = LDSR, y = factor(cell_type, rev(levels(factor(cell_type)))), 
                              fill = cell_type)) +
@@ -153,12 +153,12 @@ fig_S18 <- ggplot(data = ldsr_ziffra_cond_df, aes(x = LDSR, y = factor(cell_type
 Fig_5 <- ldsr_SCZ_plot + ggtitle(NULL)
 
 # Fig S17 - All GWAS
-Fig_17 <- plot_grid(ldsr_SCZ_plot + ggtitle('Schizophrenia'), 
-                   ldsr_ADHD_plot + ggtitle('ADHD'), 
-                   ldsr_ASD_plot + ggtitle('Autism'), 
-                   ldsr_BPD_plot + ggtitle('Bipolar Disorder'), 
-                   ldsr_MDD_plot + ggtitle('Major Depressive Disorder'), 
-                   ldsr_HEIGHT_plot + ggtitle('Height'))
+Fig_S17 <- plot_grid(ldsr_SCZ_plot + ggtitle('Schizophrenia'), 
+                     ldsr_ADHD_plot + ggtitle('ADHD'), 
+                     ldsr_ASD_plot + ggtitle('Autism'), 
+                     ldsr_BPD_plot + ggtitle('Bipolar Disorder'), 
+                     ldsr_MDD_plot + ggtitle('Major Depressive Disorder'), 
+                     ldsr_HEIGHT_plot + ggtitle('Height'))
 
 
 #--------------------------------------------------------------------------------------

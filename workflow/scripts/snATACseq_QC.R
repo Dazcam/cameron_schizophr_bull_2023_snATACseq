@@ -1,14 +1,12 @@
 #--------------------------------------------------------------------------------------
 #
-#    archR - Initial QC
+#    ArchR - Initial QC
 #
 #--------------------------------------------------------------------------------------
 
-## need to check GE doublet numbers - may be table issue lines 223-228
-
 ## Info  ------------------------------------------------------------------------------
 
-#  Run the analysis up until cluster QC cell removal 
+#  Run the analysis up until cluster QC cell removal - Run on Hawk cluster
 
 ## Load env variables  ----------------------------------------------------------------
 source('scripts/snATACseq_hawk_Renv.R')
