@@ -1,25 +1,38 @@
-# Fetal brain snATACseq analyses (version 3) - ongoing
+# Genetic implication of prenatal GABAergic and cholinergic neuron development in susceptibility to schizophrenia (2024)
 
-This project was carried out in the Division of Psychological Medicine and Clinical Neurosciences (DPMCN). (https://www.biologicalpsychiatryjournal.com/article/S0006-3223(22)01404-4/fulltext). The workflow follows the the snakemake [distribution and reproducibility](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html) recommendations. 
-
-***
-
-A snakemake (and local) pipeline to process snATACseq data. Utilising the following packages:
-
-+ [Snakemake 6.6.1](https://snakemake.readthedocs.io/en/stable/)
-+ [CellRanger atac 2.1.0](https://support.10xgenomics.com/single-cell-atac/software/pipelines/latest/algorithms/overview)
-+ [ArchR 1.0.2](https://www.archrproject.com) 
-+ [Signac 1.9.0](https://stuartlab.org/signac/)
-+ [ArchR2Signac](https://bioconductor.org/packages/release/bioc/html/scDblFinder.html)
-+ [MAGMA 1.08](https://ctg.cncr.nl/software/magma)
-+ [LD Score Regression 1.0.1](https://github.com/bulik/ldsc)
-+ etc.
+This project was carried out in the Division of Psychological Medicine and Clinical Neurosciences (DPMCN). The paper is [here]() ADD WHEN PUBLISHED. 
 
 ***
 
-**Data**
+## **snATACseq Data**
 
-Focussing on GE snATACseq data (from V1) using ArchR. 
+snATACseq data for this study are available in the following [EGA repository]():
+
+Details on the snRNAseq data  / analyses for this study can be found [here](https://github.com/Dazcam/cameron_schizophr_bull_2023_snRNAseq).
+
+***
+
+## **GWAS Data**
+
+See the following papers for GWAS data access:
+
++ [Schizophrenia](https://figshare.com/ndownloader/files/28169757)
++ [Autism](https://figshare.com/ndownloader/files/28169292)
++ [Major Depressive Disorder]() - Permission required at time of access
++ [ADHD](https://figshare.com/ndownloader/files/40036684)
++ [Bipolar Disorder]() - Permission required at time of access
++ [Height](https://portals.broadinstitute.org/collaboration/giant/images/6/63/Meta-analysis_Wood_et_al%2BUKBiobank_2018.txt.gz)
+
+***
+
+**Scripts**
+
+1. [snRNAseq_GE_get_shi_data.sh](scripts/snRNAseq_GE_get_shi_data.sh) - Download Shi data
+2. [snRNAseq_GE_prep_shi_data_for_Seurat.R](scripts/snRNAseq_GE_prep_shi_data_for_Seurat.R) - Clean and prepare Shi data
+3. [snRNAseq_GE_shi_seurat.R](scripts/snRNAseq_GE_shi_seurat.R) - Generate Seurat objects (with batch correction) for cluster levels 1 and 2
+4. [snRNAseq_GE_prep_enrich_test_files.R](scripts/snRNAseq_GE_prep_enrich_test_files.R) - Generate specificity scores and top 10% genesets for enrichment testing
+
+
 
 ***
 
