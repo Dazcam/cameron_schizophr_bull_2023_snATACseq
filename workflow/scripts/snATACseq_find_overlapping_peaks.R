@@ -48,11 +48,10 @@ for (REGION in c('LGE', 'MGE', 'CGE', 'progenitor')) {
   assign(paste0(tolower(REGION), '_hg19_peaks'), PEAKS_HG19)
   assign(paste0(tolower(REGION), '_hg38_peaks'), PEAKS_HG38)
   
-  
 }
 
 # GE overlaps - Markenscoff 2020  -----------------------------------------------------
-# Note that this was done on hg19!!!!
+# Markenscoff data aligned to hg19
 mscoff_peaks <- readxl::read_excel(paste0(MSCOFF_DIR, 'markenscoff_2020_supp_table_2.xlsx'), 
                                    sheet = 'S2B') %>%
   dplyr::select(`OCR coordinates (hg19)`, overlaps_cge_peak, overlaps_lge_peak, overlaps_mge_peak) %>%
@@ -74,7 +73,7 @@ for (REGION in c('lge', 'cge', 'mge')) {
 }
 
 
-# Find peak overlaps - 2-way
+## Find peak overlaps - 2-way  -------
 for (REGION in c('lge', 'cge', 'mge')) {
   
   SHI_PEAKS <- get(paste0(REGION, '_hg19_peaks'))
@@ -157,7 +156,7 @@ names(motifs_list) <- c('cge_motifs_df', 'lge_motifs_df', 'mge_motifs_df', 'prog
                         'cge_uniq_motifs_df', 'lge_uniq_motifs_df', 'mge_uniq_motifs_df')
 openxlsx::write.xlsx(motifs_list, paste0(TABLE_DIR, 'snATACseq_motif_tables.xlsx'))
 
-# Create final plots for motif enrichment
+## Create final plots for motif enrichment  ----------
 for (REGION in c('LGE', 'MGE', 'CGE', 'Progenitor')) {
   # https://stackoverflow.com/questions/76055759
   

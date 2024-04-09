@@ -37,7 +37,7 @@ ldsr_grp_df <- rbind(SCZ_ldsr, BPD_ldsr, ASD_ldsr, MDD_ldsr, ADHD_ldsr, HEIGHT_l
 #  select(-suffix) %>%
   dplyr::rename(cell_type = Category) %>%
   dplyr::mutate(cell_type = str_replace(cell_type, 'progenitor', 'Progenitor')) %>%
-  mutate(across('cell_type', str_replace, 'GE', 'GE-N'))
+  dplyr::mutate(across('cell_type', ~str_replace(., 'GE', 'GE-N')))
 
 for (GWAS in GWASs) {
   

@@ -15,7 +15,6 @@
 # _cA_peaks_df - queryHits and subjectHits cols denote index of the two correlated peaks
 # _cA_peaks_metadata - indexes of queryHits and subjectHits mentioned above apply to this
 
-
 ##  Load Packages  --------------------------------------------------------------------
 library(tidyverse)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
