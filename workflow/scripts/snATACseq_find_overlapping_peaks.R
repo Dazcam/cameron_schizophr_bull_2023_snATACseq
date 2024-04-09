@@ -4,10 +4,13 @@
 #
 #--------------------------------------------------------------------------------------
 
-##  Resources  ------------------------------------------------------------------------
+##  Info  -----------------------------------------------------------------------------
 
-# https://www.biostars.org/p/430015/
-# https://www.biostars.org/p/453725/
+# 1. Create 2-way overapps between bulk GE ATACseq peaks and snATACseq GE peaks
+# 2. Create 3-way overlaps between regional snATACseq GE peaks
+# 3. Run motif enrichment analyses on snATACseq GE peaks (optional) 
+# 4. Plot motif enrichment figure (Fig S1X) 
+# Note: This script is loaded by snATACseq_plots_for_paper.R to create venn figs 
 
 ##  Load Packages  --------------------------------------------------------------------
 library(tidyverse)

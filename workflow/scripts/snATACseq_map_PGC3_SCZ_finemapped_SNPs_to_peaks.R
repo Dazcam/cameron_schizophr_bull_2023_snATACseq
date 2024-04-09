@@ -10,8 +10,6 @@
 # 2. Map SNPs to hg38 using BioMart
 # 3. Check for overlap of PGC3 SCZ finemapped SNPs in snATACseq peaks (250 bp ext)
 # 4. Create binary df for whether SNP is in/not in peak for all cell types
-# 5. Run Wilcoxon rank sum test to test for difference in posterior probability meds
-#    between PGC3 SCZ SNPs in peaks v.s. rest of PGC3 SNPs not in peaks 
 
 ##  Load Packages  --------------------------------------------------------------------
 library(readxl)
@@ -206,8 +204,6 @@ for (EXT in c(PEAK_EXTENSION)) {
 }
 
 # Add index SNP and posterior probability (PP) data to binary dfs and run 
-# Wilcoxon tests comparing difference in PPs of SNPs in peaks compared
-# to SNPs not in peaks
 for (EXT in c(PEAK_EXTENSION)) {
   
   SNPS_BINARY_DF <- get(paste0('all_SNPs_binary_', EXT, '_df'))
@@ -235,67 +231,7 @@ for (EXT in c(PEAK_EXTENSION)) {
             paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
                    EXT, '_with_peaks.tsv'))
   
-  ## Run 2-sided Wilcoxon tests
-  SNPS_FINAL_DF_rsIDs <- SNPS_FINAL_DF_NO_PEAKS %>%
-    pull(rsid)
-  
-  SNPS_FINAL_DF_PPs <- SNPS_FINAL_DF_NO_PEAKS %>%
-    pull(finemap_posterior_probability)
-  
-  PGC3_SNPS_PPs <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'), 
-                              sheet = 'ST11a 95% Credible Sets') %>%
-    dplyr::select(rsid, finemap_posterior_probability) %>%
-    filter(!grepl(':|_', rsid)) %>% # 16 SNPs with 1:28690628_T_C encoding removed for now
-    base::as.data.frame(snps) %>%
-    distinct(rsid, .keep_all = TRUE) %>%
-    arrange(rsid) %>%
-    filter(!rsid %in% SNPS_FINAL_DF_rsIDs) %>%
-    pull(finemap_posterior_probability)
-  
-  cat('\n\nWilcox test for SNPs ext:', EXT, '\n\n')
-  
-  print(wilcox.test(SNPS_FINAL_DF_PPs, PGC3_SNPS_PPs, alternative = 't'))
-  
-  cat('\n\n')
-  
 }
-
-cat('Done.')
-
-# Bring the Wilcoxon test outside the loop  -------------------------------------------
-SNPS_FINAL_DF_NO_PEAKS <- read_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
-                                          PEAK_EXTENSION, '_SNPs_only.tsv'))
-SNPS_FINAL_DF_WITH_PEAKS <- read_tsv(paste0(SNP_DIR, 'all_cells_PGC3_SCZ_finemapped_SNP_peak_overlaps_', 
-                                            PEAK_EXTENSION, '_with_peaks.tsv'))
-
-SNPS_FINAL_DF_rsIDs <- SNPS_FINAL_DF_NO_PEAKS %>%
-  pull(rsid)
-
-SNPS_FINAL_DF_PPs <- SNPS_FINAL_DF_NO_PEAKS %>%
-  pull(finemap_posterior_probability)
-
-PGC3_SNPS_PPs <- read_excel(paste0(IN_DIR, 'Supplementary Table 11.xlsx'), 
-                            sheet = 'ST11a 95% Credible Sets') %>%
-  dplyr::select(rsid, finemap_posterior_probability) %>%
-  filter(!grepl(':|_', rsid)) %>% # 16 SNPs with 1:28690628_T_C encoding removed for now
-  base::as.data.frame(snps) %>%
-  distinct(rsid, .keep_all = TRUE) %>%
-  arrange(rsid) %>%
-  filter(!rsid %in% SNPS_FINAL_DF_rsIDs) %>%
-  pull(finemap_posterior_probability)
-
-cat('\n\nWilcox test for SNPs ext:', PEAK_EXTENSION, '\n\n')
-
-print(wilcox.test(SNPS_FINAL_DF_PPs, PGC3_SNPS_PPs, alternative = 't'))
-
-boxplot(SNPS_FINAL_DF_PPs, PGC3_SNPS_PPs)
-
-median(SNPS_FINAL_DF_PPs)
-median(PGC3_SNPS_PPs)
-
-SNPS_FINAL_DF_WITH_PEAKS %>%
-  dplyr::select(CGE, LGE, MGE, Progenitor) %>%
-  colSums()
 
 ## Annotate peaks containing a PGC3 SCZ GWAS SNP  -------------------------------------
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)

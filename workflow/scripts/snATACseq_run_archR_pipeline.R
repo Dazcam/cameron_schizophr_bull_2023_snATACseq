@@ -251,36 +251,5 @@ for (CELL_TYPE in c('CGE', 'MGE', 'LGE', 'progenitor', 'union')) {
   
 }
 
-## Did we report this????? ####
-## Peak coaccessibility  --------------------------------------------------------------
-archR_50 <- run_peak_coaccesibility(archR_50, PEAKS_DIR)
-
-track_plot <- plotBrowserTrack(
-  ArchRProj = archR_50,
-  groupBy = "predicted.id",
-  geneSymbol = 'DLX1',
-  upstream = 50000,
-  downstream = 50000,
-  loops = getCoAccessibility(archR_50)
-)
-
-grid::grid.newpage()
-grid::grid.draw(track_plot$DLX1)
-
-
-plot_UMAPs_by_marker_genes(archR_50, 'UMAP', MARKER_GENES)
-
-# Save
-saveArchRProject(archR_50, paste0(ARCHR_DIR, 'GE_pred_id_50'), dropCells = TRUE)
-
-## Did we report this????? ####
-
-##  Create markdown html  -------------------------------------------------------------
-# render(paste0(SCRIPT_DIR, 'snATACseq_local_testing.Rmd'),
-#        output_file = paste0('snATACseq_local_testing.html'),
-#        output_dir = paste0(RESULTS_DIR, '03MARKDOWN'))
-       
-
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
-
