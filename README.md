@@ -37,3 +37,9 @@ See the following papers for GWAS data access:
 7. [snATACseq_LDSR.smk](workflow/rules/snATACseq_LDSR.smk) - Run sLDSR integrating cell specific OCRs with SCZ and Height GWAS data
 
 ***
+
+## **Copyright and Licence Information**
+
+See the [LICENCE file](LICENCE.md)
+
+***
