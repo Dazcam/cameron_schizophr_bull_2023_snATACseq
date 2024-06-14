@@ -180,6 +180,11 @@ two_way_venns <- plot_grid(mge_2way_venn2, lge_2way_venn2, cge_2way_venn2, nrow 
 
 Fig_4 <- plot_grid(top_plot, two_way_venns, ncol = 1, rel_heights = c(2,1))
 
+tiff(paste0(FIG_DIR, "Fig_4.tiff"), height = 30, width = 30, units='cm', 
+     compression = "lzw", res = 300)
+Fig_4 
+dev.off()
+
 Fig_S14 <- plot_grid(test_510, test_611, test_993, frag_size_plot,
                      ncol = 2, labels = 'AUTO', scale = c(0.9, 0.9 ,0.9 ,0.8),  
                      label_size = 28)

@@ -6,11 +6,11 @@
 
 ##  Info  -----------------------------------------------------------------------------
 
-# 1. Create 2-way overapps between bulk GE ATACseq peaks and snATACseq GE peaks
+# 1. Create 2-way overlaps between bulk GE ATACseq peaks and snATACseq GE peaks
 # 2. Create 3-way overlaps between regional snATACseq GE peaks
 # 3. Run motif enrichment analyses on snATACseq GE peaks (optional) 
 # 4. Plot motif enrichment figure (Fig S1X) 
-# Note: This script is loaded by snATACseq_plots_for_paper.R to create venn figs 
+# Note: This script is loaded by snATACseq_plots_for_paper.R to create Venn figs 
 
 ##  Load Packages  --------------------------------------------------------------------
 library(tidyverse)
@@ -29,7 +29,7 @@ MSCOFF_DIR <- paste0(PUBLIC_DIR, 'markenscoff_2020/')
 PEAKS_DIR <- paste0(RESULTS_DIR, '05PEAKS/')
 SCRIPT_DIR <- paste0(ROOT_DIR, 'workflow/scripts/')
 
-TABLE_DIR <- paste0(RESULTS, '07TABLES/')
+TABLE_DIR <- paste0(RESULTS_DIR, '07TABLES/')
 
 RUN_PEAK_MOTIFS <- FALSE
 RUN_UNIQUE_PEAK_MOTIFS <- FALSE
@@ -112,12 +112,13 @@ for (region in c('lge', 'cge', 'mge')) {
     message('Region peak cnt: ', nrow(bed))
 }
 
-all.peaks <- OVERLAPS$all.peaks
-gr1.renamed <- all.peaks$gr1
-gr2.renamed <- all.peaks$gr2
-peakNames <- melt(ol$peaklist[['gr1///gr2']]$peakNames, value.name="merged.peak.id")
-gr1.sub <- gr1.renamed[peakNames[grepl("^gr1", peakNames[, 3]), 3]]
-gr2.sub <- gr2.renamed[peakNames[grepl("^gr2", peakNames[, 3]), 3]]
+# What is this code - is it needed
+# all.peaks <- OVERLAPS$all.peaks
+# gr1.renamed <- all.peaks$gr1
+# gr2.renamed <- all.peaks$gr2
+# peakNames <- melt(all$peaklist[['gr1///gr2']]$peakNames, value.name="merged.peak.id")
+# gr1.sub <- gr1.renamed[peakNames[grepl("^gr1", peakNames[, 3]), 3]]
+# gr2.sub <- gr2.renamed[peakNames[grepl("^gr2", peakNames[, 3]), 3]]
 
 # Find GE InNs peak overlaps hg38 - 3-way
 cat('\nFinding overlaps for GE InNs ... \n\n')
